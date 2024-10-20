@@ -60,9 +60,8 @@
                         },
                         body: JSON.stringify({uri})
                     })
-
                     if (!response.ok) {
-                        throw new Error(`Server error: ${response.statusText}`)
+                        throw new Error(response.error)
                     }
 
                     const data = await response.json()
@@ -73,6 +72,10 @@
                     let clan1 = ''
                     let clan2 = ''
                     let clan3 = ''
+
+                    if (!data || !data.players) {
+                        throw new Error('"Бой завершен или не поддерживается, введите другой лог"')
+                    }
 
                     data.players.forEach(player => {
                         const playerRow = `<tr>
@@ -123,7 +126,7 @@
                 `
                 } catch (error) {
                     document.getElementById('result').innerHTML = `
-                    <p style="color: red;"><strong>Error:</strong> ${error.message}</p>
+                    <p style="color: red;">${error}</p>
                 `
                 }
             }

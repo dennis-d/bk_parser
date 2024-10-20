@@ -43,9 +43,8 @@ app.post("/parse", async (req, res) => {
     try {
         res.json(await parseLogs(uri))
     } catch (error) {
-        console.error("Error parsing logs:", error.message)
         console.error("Error parsing logs:", error.stack)
-        res.status(500).send(error.message)
+        res.status(500).json({ error: error.message })
     }
 })
 
@@ -58,9 +57,7 @@ async function parseLogs(uri) {
 
     let statistics = extractBattleMeta(dom)
     if (statistics.players.length == 0) {
-        return new Error(
-            "Бой завершен или не поддерживается, введите другой лог "
-        )
+        return statistics
     }
     statistics = await parseBattleLog(uri, statistics)
     return statistics

@@ -1,7 +1,8 @@
 const express = require("express")
-const puppeteer = require("puppeteer")
+const axios = require("axios")
 const cheerio = require("cheerio")
 const path = require("path")
+const iconv = require("iconv-lite")
 // for debug purposes
 // const fs = require("fs")
 // const htmlDebug = fs.readFileSync("public/logs_klan.pl", "utf-8")
@@ -52,22 +53,21 @@ app.post("/parse", async (req, res) => {
 
 // Function to parse the logs using Puppeteer and Cheerio
 async function parseLogs(uri) {
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage()
-    await page.goto(uri)
-
-    const content = await page.content()
-    // console.log(content)
+    const response = await axios.get(url, {
+        headers: { "User-Agent": "Chrome/5.0" },
+        responseType: "arraybuffer", // Get the raw buffer
+    })
+    const content = iconv.decode(response.data, "windows-1251")
     // content = htmlDebug
     const $ = cheerio.load(content)
 
     let statistics = extractBattleMeta($)
     if (statistics.players.length > 0) {
-        statistics = await parseBattleLog(uri, statistics, browser)
+        statistics = await parseBattleLog(uri, statistics)
     }
 
     await browser.close()
-    console.log(statistics)
+    // console.log(statistics)
     return statistics
 }
 
@@ -210,17 +210,18 @@ function extractBattleMeta($) {
     return statistics
 }
 
-async function parseBattleLog(log, stats, browser) {
+async function parseBattleLog(log, stats) {
     try {
         const match = log.match(regexURL)
 
         for (let player of stats.players) {
             // console.log(player)
+            const response = await axios.get(url, {
+                headers: { "User-Agent": "Chrome/5.0" },
+                responseType: "arraybuffer", // Get the raw buffer
+            })
+            const content = iconv.decode(response.data, "windows-1251")
             const url = getBaseURL(match[0], player.name)
-            const page = await browser.newPage()
-            await page.goto(url)
-
-            const content = await page.content()
 
             // Check for the specific string indicating an incorrect username
             if (content.includes("Ничего не найдено. Совсем не найдено.")) {

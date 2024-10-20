@@ -45,7 +45,7 @@ app.post("/parse", async (req, res) => {
     } catch (error) {
         console.error("Error parsing logs:", error.message)
         console.error("Error parsing logs:", error.stack)
-        res.status(500).send("Error parsing logs: " + error.message)
+        res.status(500).send(error.message)
     }
 })
 
@@ -57,10 +57,10 @@ async function parseLogs(uri) {
     const dom = new jsdom.JSDOM(iconv.decode(response.data, "windows-1251"))
 
     let statistics = extractBattleMeta(dom)
-    if (statistics.players.length > 0) {
-        statistics = await parseBattleLog(uri, statistics)
+    if (statistics.players.length == 0) {
+        throw new Error("Бой завершен, введите другой лог")
     }
-
+    statistics = await parseBattleLog(uri, statistics)
     return statistics
 }
 

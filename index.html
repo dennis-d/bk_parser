@@ -73,7 +73,7 @@
                     let clan2 = ''
                     let clan3 = ''
 
-                    if (!data || !data.players) {
+                    if (data && data.players && data.players.length == 0) {
                         throw new Error('"Бой завершен или не поддерживается, введите другой лог"')
                     }
 

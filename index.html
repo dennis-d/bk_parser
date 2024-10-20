@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Combats Log Parser</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="commoninf.js"></script>
+
+        <script>
+
+            function getClan(klan) {
+                return `<a href="http://capitalcity.combats.com/clans_inf.pl?${klan}" target="_blank">
+                <img src="https://img.combats.com/i/klan/${klan}.gif" width="24" height="15" alt="Clan ${klan}">
+            </a>`
+            }
+
+            function getAlign(align) {
+                const alignNames = [
+                    "Мусорщика","Волынщика","Искушения","Падальщика","Мироздателя","Благодати",
+                    "Милосердия","Вознесения","Повелителя Воды","Повелителя Огня","Повелителя Воздуха",
+                    "Повелителя Земли","Повелителя Вечности","Повелителя Металла","Пантеона Баланса",
+                    "Справедливости","Пересмешника","Лорда Разрушителя"
+                ]
+                const alignIndex = parseInt(align) - 11
+                return `<a href="http://lib.combats.com/article-align${align}" target="_blank">
+                <img src="https://img.combats.com/i/align${align}.gif" width="12" height="15" alt="Последователь ${alignNames[alignIndex]}">
+            </a>`
+            }
+
+
+            function getStolbFormatted(stolb) {
+                let color
+                if (stolb < 2) {
+                    color = 'green'
+                } else if (stolb <= 4) {
+                    color = 'yellow'
+                } else {
+                    color = 'red'
+                }
+                return `<b style="color: ${color};">${stolb.toFixed(2)}</b> / <b style="color: blue;">5</b>`
+            }
+
+            function getName(name,id,level) {
+                return `${name} [${level}] <a href="http://capitalcity.combats.com/inf.pl?${id}" target="_blank">
+                <img src="https://img.combats.com/i/inf.gif" width="12" height="11" alt="Инф. о ${name}">
+            </a>`
+            }
+
+            async function parseLogs(event) {
+                event.preventDefault()
+                const uri = document.getElementById('uri').value
+
+                try {
+                    const response = await fetch('/parse',{
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({uri})
+                    })
+
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.statusText}`)
+                    }
+
+                    const data = await response.json()
+
+                    let team1Players = ''
+                    let team2Players = ''
+                    let team3Players = ''
+                    let clan1 = ''
+                    let clan2 = ''
+                    let players = []
+
+                    data.players.forEach(player => {
+                        const playerRow = `<tr>
+                        <td>${getAlign(player.aligns)} ${getClan(player.clan_name)} ${getName(player.name,player.user_id,player.level)}</td>
+                        <td>[${player.current_health}/<b">${player.max_health}</b>]</td>
+                        <td id="stolb">${getStolbFormatted(player.stolb)}</td>
+                        <td id="total-heal">${player.healed}</td>
+                    </tr>`
+
+                        if (player.team === 'B1') {
+                            clan1 = player.clan_name
+                            team1Players += playerRow
+                        } else if (player.team === 'B2') {
+                            clan2 = player.clan_name
+                            team2Players += playerRow
+                        } else {
+                            team3Players += playerRow
+                        }
+                    })
+
+                    if (team3Players.length > 0) {
+                    }
+
+                    const team1Table = `<table class="players-table">
+                    <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team1Players}
+                </table>`
+                    const team2Table = `<table class="players-table">
+                    <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team2Players}
+                </table>`
+                    const team3Table = `<table class="players-table">
+                    <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team3Players}
+                </table>`
+
+                    document.getElementById('result').innerHTML = `
+                    <p><strong>Тип боя:</strong> ${data.battle_type} <img src="${data.battle_image}" alt="Battle Image"></p>
+                    <h3>Информация о игроках:</h3>
+                    <div class="team-container">
+                        <div class="team">
+                            <div class="team-title"><b color="black">${clan1}</b>: Нападение</div>
+                            ${team1Table}
+                        </div>
+                        <div class="team">
+                            <div class="team-title"><b color="black">${clan2}</b>: Защита</div>
+                            ${team2Table}
+                        </div>
+                    </div>
+                    <h3>Players Information:</h3>
+                    ${players.join(' ')}
+                `
+                } catch (error) {
+                    document.getElementById('result').innerHTML = `
+                    <p style="color: red;"><strong>Error:</strong> ${error.message}</p>
+                `
+                }
+            }
+
+            async function refreshLogs() {
+                const uri = document.getElementById('uri').value
+                if (uri) {
+                    await parseLogs({
+                        preventDefault: () => { } // Mimic preventDefault behavior
+                    })
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <div class="result-container" id="result"></div>
+        <div />
+        <div class="form-container">
+            <h1>Log Parser</h1>
+            <form onsubmit="parseLogs(event)">
+                <label for="uri">Enter URI:</label><br>
+                <input type="text" id="uri" name="uri"
+                    placeholder="https://%city%city.combats.com/logs.pl?log=%timestamp%" required><br>
+                <div class="button-container">
+                    <button type="submit">Parse Logs</button>
+                    <button type="button" onclick="refreshLogs()">Refresh</button>
+                </div>
+            </form>
+        </div>
+    </body>
+
+</html>

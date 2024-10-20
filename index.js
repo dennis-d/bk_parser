@@ -54,7 +54,6 @@ async function parseLogs(uri) {
         headers: { "User-Agent": "Chrome/5.0" },
         responseType: "arraybuffer", // Get the raw buffer
     })
-    content = htmlDebug
     const dom = new jsdom.JSDOM(iconv.decode(response.data, "windows-1251"))
 
     let statistics = extractBattleMeta(dom)

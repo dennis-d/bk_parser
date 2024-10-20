@@ -1,9 +1,8 @@
 const express = require("express")
 const axios = require("axios")
-const cheerio = require("cheerio")
 const path = require("path")
 const iconv = require("iconv-lite")
-// for debug purposes
+const jsdom = require("jsdom")
 // const fs = require("fs")
 // const htmlDebug = fs.readFileSync("public/logs_klan.pl", "utf-8")
 
@@ -41,38 +40,33 @@ app.post("/parse", async (req, res) => {
             .send("Invalid URI format. Please use a URI in the correct format.")
     }
     uri += uri.includes("#end") ? "" : `&${Math.random()}#end`
-
     try {
-        const statistics = await parseLogs(uri)
-        res.json(statistics)
+        res.json(await parseLogs(uri))
     } catch (error) {
         console.error("Error parsing logs:", error.message)
+        console.error("Error parsing logs:", error.stack)
         res.status(500).send("Error parsing logs: " + error.message)
     }
 })
 
-// Function to parse the logs using Puppeteer and Cheerio
 async function parseLogs(uri) {
-    const response = await axios.get(url, {
+    const response = await axios.get(uri, {
         headers: { "User-Agent": "Chrome/5.0" },
         responseType: "arraybuffer", // Get the raw buffer
     })
-    const content = iconv.decode(response.data, "windows-1251")
-    // content = htmlDebug
-    const $ = cheerio.load(content)
+    content = htmlDebug
+    const dom = new jsdom.JSDOM(iconv.decode(response.data, "windows-1251"))
 
-    let statistics = extractBattleMeta($)
+    let statistics = extractBattleMeta(dom)
     if (statistics.players.length > 0) {
         statistics = await parseBattleLog(uri, statistics)
     }
 
-    await browser.close()
-    // console.log(statistics)
     return statistics
 }
 
 // Function to extract battle information
-function extractBattleMeta($) {
+function extractBattleMeta(dom) {
     const statistics = { players: [] }
     const battleTypeMappings = [
         {
@@ -155,32 +149,38 @@ function extractBattleMeta($) {
             type: "Бой Клан-Лиги",
             image: "https://img.combats.com/i/items/attackclana.gif",
         },
+        {
+            regex: /Групповой Конфликт/,
+            type: "Групповой Конфликт",
+            image: "https://img.combats.com/i/fighttype1.gif",
+        },
     ]
 
-    $(
-        'td[align="right"][width="100%"][style*="padding-right:20"][valign="top"]'
-    ).each((_, element) => {
-        const comment = $(element).text().trim()
-        const match = battleTypeMappings.find((mapping) =>
-            mapping.regex.test(comment)
+    dom.window.document
+        .querySelectorAll(
+            'td[align="right"][width="100%"][style*="padding-right:20"][valign="top"]'
         )
-        if (match) {
-            statistics.battle_type = match.type
-            statistics.battle_image = match.image
-        }
-    })
+        .forEach((element) => {
+            const comment = element.textContent.trim()
+            const match = battleTypeMappings.find((mapping) =>
+                mapping.regex.test(comment)
+            )
+            if (match) {
+                statistics.battle_type = match.type
+                statistics.battle_image = match.image
+            }
+        })
 
-    if (!statistics.battle_type) throw new Error("Unknown battle type")
+    if (!statistics.battle_type) {
+        statistics.battle_type = "Групповой Конфликт"
+        statistics.battle_image = "https://img.combats.com/i/fighttype1.gif"
+    }
 
-    const fontB9Elements = $("font.B9")
-    fontB9Elements.each((i, el) => {
-        const fontB9Element = $(el)
-        const scriptTag = fontB9Element.find("script").html()
-        const healthText = el.next.data
-        // console.log(scriptTag)
+    dom.window.document.querySelectorAll("font.B9").forEach((el) => {
+        const scriptTag = el.querySelector("script").textContent
+        const healthText = el.nextSibling && el.nextSibling.textContent
         const regex = /drwfl\("([^\"]+)",(\d+),"(\d+)",(\d+),"([^\"]+)"\)/
         const healthRegex = /\[(\d+)\/(\d+)\]/
-
         const match = regex.exec(scriptTag)
         const healthMatch = healthRegex.exec(healthText)
 
@@ -190,7 +190,7 @@ function extractBattleMeta($) {
             const level = parseInt(match[3], 10)
             const aligns = parseInt(match[4], 10)
             const clanName = match[5]
-            const characterTeam = fontB9Element.find("font").attr("class")
+            const characterTeam = el.querySelector("font")?.className
             const currentHealth = parseInt(healthMatch[1], 10)
             const maxHealth = parseInt(healthMatch[2], 10)
 
@@ -215,13 +215,12 @@ async function parseBattleLog(log, stats) {
         const match = log.match(regexURL)
 
         for (let player of stats.players) {
-            // console.log(player)
+            const url = getBaseURL(match[0], player.name)
             const response = await axios.get(url, {
                 headers: { "User-Agent": "Chrome/5.0" },
                 responseType: "arraybuffer", // Get the raw buffer
             })
             const content = iconv.decode(response.data, "windows-1251")
-            const url = getBaseURL(match[0], player.name)
 
             // Check for the specific string indicating an incorrect username
             if (content.includes("Ничего не найдено. Совсем не найдено.")) {
@@ -242,9 +241,8 @@ async function parseBattleLog(log, stats) {
             player.mana = 0
             player.healed = 0
 
-            const $ = cheerio.load(content)
-
-            let logEntries = $("body").html()
+            const dom = new jsdom.JSDOM(content)
+            let logEntries = dom.window.document.body.innerHTML
             if (!logEntries) {
                 console.error("Error: No content in response")
                 return
@@ -291,7 +289,8 @@ async function parseBattleLog(log, stats) {
         }
         return stats
     } catch (error) {
-        console.error("Error fetching logs:", error)
+        console.error(error.message)
+        console.error(error.stack)
     }
 }
 

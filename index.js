@@ -58,7 +58,9 @@ async function parseLogs(uri) {
 
     let statistics = extractBattleMeta(dom)
     if (statistics.players.length == 0) {
-        throw new Error("Бой завершен, введите другой лог")
+        return new Error(
+            "Бой завершен или не поддерживается, введите другой лог "
+        )
     }
     statistics = await parseBattleLog(uri, statistics)
     return statistics
@@ -210,87 +212,78 @@ function extractBattleMeta(dom) {
 }
 
 async function parseBattleLog(log, stats) {
-    try {
-        const match = log.match(regexURL)
+    const match = log.match(regexURL)
 
-        for (let player of stats.players) {
-            const url = getBaseURL(match[0], player.name)
-            const response = await axios.get(url, {
-                headers: { "User-Agent": "Chrome/5.0" },
-                responseType: "arraybuffer", // Get the raw buffer
-            })
-            const content = iconv.decode(response.data, "windows-1251")
+    for (let player of stats.players) {
+        const url = getBaseURL(match[0], player.name)
+        const response = await axios.get(url, {
+            headers: { "User-Agent": "Chrome/5.0" },
+            responseType: "arraybuffer", // Get the raw buffer
+        })
+        const content = iconv.decode(response.data, "windows-1251")
 
-            // Check for the specific string indicating an incorrect username
-            if (content.includes("Ничего не найдено. Совсем не найдено.")) {
-                console.error("Error: Incorrect username")
-                return
-            }
-
-            // Check for the specific string indicating an incorrect log ID
-            if (content.includes("Не найден лог этого боя")) {
-                console.error("Error: Не найден лог этого боя")
-                return
-            }
-
-            player.stolb = 0
-            player.extra = 0
-            // player.natisk = 0
-            // player.krug = 0
-            player.mana = 0
-            player.healed = 0
-
-            const dom = new jsdom.JSDOM(content)
-            let logEntries = dom.window.document.body.innerHTML
-            if (!logEntries) {
-                console.error("Error: No content in response")
-                return
-            }
-            const hrContentMatch = logEntries.match(/<HR>([\s\S]*?)<HR>/gi)
-            logEntries = hrContentMatch ? hrContentMatch.join("") : ""
-
-            logEntries = logEntries.replace(/<script.*?<\/script>/gis, "")
-            logEntries = logEntries.split("<br>")
-
-            logEntries.forEach((entry) => {
-                if (extraHealth.some((extra) => entry.includes(extra))) {
-                    const match = entry.match(regexExtra)
-                    if (match) {
-                        const [_, extra] = match
-                        player["extra"] += parseInt(extra, 10)
-                    }
-                }
-                if (healthHeals.some((heal) => entry.includes(heal))) {
-                    const match = entry.match(regexHealth)
-                    if (match) {
-                        const [_, name, otheal, currentHealth, maxHealth] =
-                            match
-                        player.healed += parseInt(otheal, 10)
-                        player.max_health = parseInt(maxHealth, 10)
-                        player.original_health = parseInt(
-                            maxHealth - player.extra,
-                            10
-                        )
-                    }
-                } else if (manaHeals.some((heal) => entry.includes(heal))) {
-                    const match = entry.match(regexMana)
-                    if (match) {
-                        const [_, name, otheal, currentHealth, maxHealth] =
-                            match
-                        player.mana += parseInt(otheal, 10)
-                    }
-                } else {
-                }
-            })
-            player.stolb = parseFloat(
-                player.healed / (player.max_health - player.extra)
-            )
+        // Check for the specific string indicating an incorrect username
+        if (content.includes("Ничего не найдено. Совсем не найдено.")) {
+            throw new Error("Ничего не найдено. Совсем не найдено.")
         }
-        return stats
-    } catch (error) {
-        console.error(error.message)
-        console.error(error.stack)
+
+        // Check for the specific string indicating an incorrect log ID
+        if (content.includes("Не найден лог этого боя")) {
+            throw new Error("Не найден лог этого боя")
+        }
+
+        player.stolb = 0
+        player.extra = 0
+        // player.natisk = 0
+        // player.krug = 0
+        player.mana = 0
+        player.healed = 0
+
+        const dom = new jsdom.JSDOM(content)
+        let logEntries = dom.window.document.body.innerHTML
+        if (!logEntries) {
+            console.error("Error: No content in response")
+            return
+        }
+        const hrContentMatch = logEntries.match(/<HR>([\s\S]*?)<HR>/gi)
+        logEntries = hrContentMatch ? hrContentMatch.join("") : ""
+
+        logEntries = logEntries.replace(/<script.*?<\/script>/gis, "")
+        logEntries = logEntries.split("<br>")
+
+        logEntries.forEach((entry) => {
+            if (extraHealth.some((extra) => entry.includes(extra))) {
+                const match = entry.match(regexExtra)
+                if (match) {
+                    const [_, extra] = match
+                    player["extra"] += parseInt(extra, 10)
+                }
+            }
+            if (healthHeals.some((heal) => entry.includes(heal))) {
+                const match = entry.match(regexHealth)
+                if (match) {
+                    const [_, name, otheal, currentHealth, maxHealth] = match
+                    player.healed += parseInt(otheal, 10)
+                    player.max_health = parseInt(maxHealth, 10)
+                    player.original_health = parseInt(
+                        maxHealth - player.extra,
+                        10
+                    )
+                }
+            } else if (manaHeals.some((heal) => entry.includes(heal))) {
+                const match = entry.match(regexMana)
+                if (match) {
+                    const [_, name, otheal, currentHealth, maxHealth] = match
+                    player.mana += parseInt(otheal, 10)
+                }
+            } else {
+            }
+        })
+        player.stolb = parseFloat(
+            player.healed / (player.max_health - player.extra)
+        )
     }
+    return stats
 }
 
 function getBaseURL(log, userName) {

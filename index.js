@@ -78,12 +78,12 @@ function extractBattleMeta($) {
         {
             regex: /Клановое сражение \+1 в нападении/,
             type: "Клановое сражение +1 в нападении",
-            image: "http://img.combats.com/i/items/attackclana.gif",
+            image: "https://img.combats.com/i/items/attackclana.gif",
         },
         {
             regex: /Клановое сражение/,
             type: "Клановое сражение",
-            image: "http://img.combats.com/i/items/attackclana.gif",
+            image: "https://img.combats.com/i/items/attackclana.gif",
         },
         {
             regex: /Регулярный Клановый Вызов 1 на 1/,
@@ -153,7 +153,7 @@ function extractBattleMeta($) {
         {
             regex: /Бой Клан-Лиги/,
             type: "Бой Клан-Лиги",
-            image: "https://img.combats.com/i/items/attackclanl.gif",
+            image: "https://img.combats.com/i/items/attackclana.gif",
         },
     ]
 
@@ -170,10 +170,7 @@ function extractBattleMeta($) {
         }
     })
 
-    if (!statistics.battle_type) {
-        statistics.battle_type = "Неизвестный тип"
-        statistics.battle_image = "Unknown Image"
-    }
+    if (!statistics.battle_type) throw new Error("Unknown battle type")
 
     const fontB9Elements = $("font.B9")
     fontB9Elements.each((i, el) => {
@@ -209,7 +206,7 @@ function extractBattleMeta($) {
             })
         }
     })
-    console.log(statistics)
+    // console.log(statistics)
     return statistics
 }
 
@@ -218,7 +215,7 @@ async function parseBattleLog(log, stats, browser) {
         const match = log.match(regexURL)
 
         for (let player of stats.players) {
-            console.log(player)
+            // console.log(player)
             const url = getBaseURL(match[0], player.name)
             const page = await browser.newPage()
             await page.goto(url)
@@ -239,8 +236,8 @@ async function parseBattleLog(log, stats, browser) {
 
             player.stolb = 0
             player.extra = 0
-            player.natisk = 0
-            player.krug = 0
+            // player.natisk = 0
+            // player.krug = 0
             player.mana = 0
             player.healed = 0
 

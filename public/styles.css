@@ -111,7 +111,7 @@ h4 {
 .team-title span {
     font-weight: bold;
     font-size: 1.2em;
-    color: #333;
+    color: #333 !important;
 }
 
 .players-table {

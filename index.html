@@ -72,7 +72,7 @@
                     let team3Players = ''
                     let clan1 = ''
                     let clan2 = ''
-                    let players = []
+                    let clan3 = ''
 
                     data.players.forEach(player => {
                         const playerRow = `<tr>
@@ -89,6 +89,7 @@
                             clan2 = player.clan_name
                             team2Players += playerRow
                         } else {
+                            clan3 = player.clan_name
                             team3Players += playerRow
                         }
                     })
@@ -115,7 +116,7 @@
                             ${team1Table}
                         </div>
                         <div class="team">
-                            <div class="team-title">${getClan(clan1)}<span>${clan2}:</span> Защита</div>
+                            <div class="team-title">${getClan(clan2)}<span>${clan2}:</span> Защита</div>
                             ${team2Table}
                         </div>
                     </div>

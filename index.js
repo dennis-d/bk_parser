@@ -7,7 +7,7 @@ const path = require("path")
 // const htmlDebug = fs.readFileSync("public/logs_klan.pl", "utf-8")
 
 const app = express()
-const PORT = 8081
+const PORT = 12358
 const regexHealth =
     /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\]/i
 const regexMana =

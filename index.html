@@ -111,16 +111,14 @@
                     <h3>Информация о игроках:</h3>
                     <div class="team-container">
                         <div class="team">
-                            <div class="team-title"><span>${clan1}</span>: Нападение</div>
+                            <div class="team-title">${getClan(clan1)}<span>${clan1}:</span> Нападение</div>
                             ${team1Table}
                         </div>
                         <div class="team">
-                            <div class="team-title"><span>${clan2}</span>: Защита</div>
+                            <div class="team-title">${getClan(clan1)}<span>${clan2}:</span> Защита</div>
                             ${team2Table}
                         </div>
                     </div>
-                    <h3>Players Information:</h3>
-                    ${players.join(' ')}
                 `
                 } catch (error) {
                     document.getElementById('result').innerHTML = `

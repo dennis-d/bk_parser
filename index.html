@@ -35,7 +35,7 @@
                 if (stolb < 2) {
                     color = 'green'
                 } else if (stolb <= 4) {
-                    color = 'yellow'
+                    color = 'orange'
                 } else {
                     color = 'red'
                 }
@@ -79,7 +79,7 @@
                         <td>${getAlign(player.aligns)} ${getClan(player.clan_name)} ${getName(player.name,player.user_id,player.level)}</td>
                         <td>[${player.current_health}/<b">${player.max_health}</b>]</td>
                         <td id="stolb">${getStolbFormatted(player.stolb)}</td>
-                        <td id="total-heal">${player.healed}</td>
+                        <td id="total-heal">${player.healed} HP</td>
                     </tr>`
 
                         if (player.team === 'B1') {
@@ -111,11 +111,11 @@
                     <h3>Информация о игроках:</h3>
                     <div class="team-container">
                         <div class="team">
-                            <div class="team-title"><b color="black">${clan1}</b>: Нападение</div>
+                            <div class="team-title"><span>${clan1}</span>: Нападение</div>
                             ${team1Table}
                         </div>
                         <div class="team">
-                            <div class="team-title"><b color="black">${clan2}</b>: Защита</div>
+                            <div class="team-title"><span>${clan2}</span>: Защита</div>
                             ${team2Table}
                         </div>
                     </div>

@@ -150,6 +150,11 @@ function extractBattleMeta($) {
             type: "Нелечимая травма на три дня",
             image: "https://img.combats.com/i/items/attackt4320.gif",
         },
+        {
+            regex: /Бой Клан-Лиги/,
+            type: "Бой Клан-Лиги",
+            image: "https://img.combats.com/i/items/attackclanl.gif",
+        },
     ]
 
     $(

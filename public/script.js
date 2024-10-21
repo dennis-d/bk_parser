@@ -10,7 +10,7 @@ async function parseLogs(event) {
     toggleButtons(false) // Disable buttons while parsing
 
     try {
-        resultContainer.innerHTML = `<p>Loading...</p>`
+        resultContainer.innerHTML = `<p><string>Анализ...</strong></p>`
         const response = await fetch("/parse", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

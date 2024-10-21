@@ -1,143 +1,169 @@
+/* General Page Layout */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #e6e6e6;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: 100vh;
     color: #333;
+}
+
+/* Header Section with H1 and Form */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 20px;
+    background-color: #e0e0e0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    color: #444;
-    margin-top: 20px;
-    font-size: 2em;
+    color: #333;
+    font-size: 2.5em;
+    margin: 0;
 }
 
-.form-container {
-    background: #f2f2f2;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
-    width: 100%;
-    min-width: 700px;
-    max-width: 1000px;
-}
-
-.button-container {
-    margin-top: 20px;
+/* Form Section */
+.form-section {
     display: flex;
-    gap: 15px;
-    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+    justify-content: flex-start;
 }
 
-input[type="text"] {
-    width: 95%;
-    padding: 12px;
-    float: center;
-    margin-top: 15px;
-    margin-bottom: 20px;
+.form-section input[type="text"] {
+    width: 55%; /* Takes up 60% of the window width */
+    min-width: 500px; /* Minimum width of 750px */
+    padding: 15px;
+    margin-left: 20px;
+    border-radius: 5px;
     border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
-    font-size: 1em;
     background-color: #fff;
     color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1.2em;
+    margin-right: 20px;
 }
 
-button {
-    padding: 12px 20px;
+.form-section button {
+    padding: 15px 20px;
     border: none;
-    background-color: #b0b0b0;
+    background-color: #888; /* Metallic gray */
     color: #fff;
-    border-radius: 10px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    font-size: 1em;
+    transition: background-color 0.3s;
+    font-size: 1.2em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-button:hover {
-    background-color: #9e9e9e;
-    transform: scale(1.05);
+.form-section button:hover {
+    background-color: #666; /* Darker metallic gray */
+}
+
+/* Full-Window Layout for Tables */
+.result-section {
+    display: flex;
+    justify-content: space-around; /* Spread tables out */
+    align-items: stretch; /* Ensures both tables stretch to the same height */
+    flex-grow: 1;
+    width: 100%;
+    padding: 20px;
 }
 
 .result-container {
-    width: 90%;
-    max-width: 1200px;
-    margin-bottom: 30px;
-    padding: 25px;
-    background-color: #f2f2f2;
-    border-radius: 15px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-h4 {
-    margin-top: 0;
-    font-size: 1.5em;
     display: flex;
-    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
 }
 
-.team-container {
-    display: flex;
-    gap: 30px;
-    margin-top: 30px;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-.team {
-    flex: 1;
-    min-width: 300px;
-    background-color: #f2f2f2;
+.team-table-wrapper {
+    background-color: #fff;
     padding: 20px;
-    border-radius: 15px;
-    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
-}
-
-.team-title {
-    text-align: center;
-    font-weight: bold;
-    margin-bottom: 15px;
-    background-color: #b0b0b0;
-    color: #fff;
-    padding: 10px;
     border-radius: 10px;
-    font-size: 1.2em;
-}
-
-.team-title span {
-    font-weight: bold;
-    font-size: 1.2em;
-    color: #333 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .players-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
+    text-align: right;
+    flex-grow: 1; /* Allows the table to stretch to fill the available space */
 }
 
+/* Metallic headers */
 .players-table th,
 .players-table td {
-    border: 1px solid #ccc;
-    padding: 12px;
-    text-align: right;
-    font-size: 0.9em;
+    padding: 15px;
+    border: 1px solid #ddd;
+    color: #333;
+    font-size: 1em;
 }
 
 .players-table th {
-    background-color: #888;
+    background-color: #888; /* Metallic gray */
     color: white;
     font-weight: bold;
 }
 
 .players-table tr:nth-child(even) {
-    background-color: #e6e6e6;
+    background-color: #f9f9f9;
 }
 
 .players-table tr:hover {
-    background-color: #d4d4d4;
+    background-color: #e1e9ef;
+}
+
+.team-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    text-align: center;
+}
+
+.copy-button {
+    margin-top: 10px;
+    padding: 10px 15px;
+    background-color: #888; /* Metallic gray */
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.copy-button:hover {
+    background-color: #666; /* Darker metallic gray */
+}
+
+.hidden-textarea {
+    display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .result-container {
+        flex-direction: column;
+    }
+
+    .team-table-wrapper {
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .form-section input[type="text"] {
+        width: 90%;
+        min-width: unset; /* Removes the min-width on small screens */
+    }
 }

@@ -3,27 +3,27 @@ const axios = require("axios")
 const path = require("path")
 const iconv = require("iconv-lite")
 const jsdom = require("jsdom")
-// const fs = require("fs")
-// const htmlDebug = fs.readFileSync("public/logs_klan.pl", "utf-8")
 
 const app = express()
-const PORT = 12358
-const regexHealth =
-    /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\]/i
-const regexMana =
-    /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\] \(Мана\)/i
-const regexExtra = /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/
-const regexURL = /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i
-const regexProtect =
-    /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/
+const PORT = process.env.PORT || 12358
+const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
 
-const healthHeals = ["Восстановление энергии", "Исцеление"]
-const manaHeals = ["Восстановление Маны", "Прозрение"]
-const extraHealth = ["Резерв сил", "Из последних сил"]
+const REGEX = {
+    health: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\]/i,
+    mana: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\] \(Мана\)/i,
+    extra: /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/,
+    url: /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
+    protect:
+        /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
+}
 
-const healthPattern = /\[(\d{3,5})\/(\d{3,5})\]/
+const HEAL_TYPES = {
+    healthHeals: ["Восстановление энергии", "Исцеление"],
+    manaHeals: ["Восстановление Маны", "Прозрение"],
+    extraHealth: ["Резерв сил", "Из последних сил"],
+}
 
-// Middleware to parse form data
+// Middleware for parsing form data
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(express.static(path.join(__dirname, "public")))
@@ -35,40 +35,173 @@ app.get("/", (req, res) => {
 
 // Handle form submission without reloading the page
 app.post("/parse", async (req, res) => {
-    let uri = req.body.uri
-    if (!/^https:\/\/.+\.combats\.com\/logs\.pl\?log=.+/.test(uri)) {
-        return res
-            .status(400)
-            .send("Invalid URI format. Please use a URI in the correct format.")
+    const uri = sanitizeUri(req.body.uri)
+    if (!isValidUri(uri)) {
+        return res.status(400).send("Invalid URI format.")
     }
-    uri += uri.includes("#end") ? "" : `&${Math.random()}#end`
+
     try {
-        res.json(await parseLogs(uri))
+        const statistics = await parseLogs(uri)
+        res.json(statistics)
     } catch (error) {
-        console.error("Error parsing logs:", error.stack)
+        console.error("Error parsing logs:", error.message)
         res.status(500).json({ error: error.message })
     }
 })
 
-async function parseLogs(uri) {
-    const response = await axios.get(uri, {
-        headers: { "User-Agent": "Chrome/5.0" },
-        responseType: "arraybuffer", // Get the raw buffer
-    })
-    const dom = new jsdom.JSDOM(iconv.decode(response.data, "windows-1251"))
+// Helper to validate and sanitize URI
+function isValidUri(uri) {
+    return REGEX.url.test(uri)
+}
 
-    let statistics = extractBattleMeta(dom)
-    if (statistics.players.length == 0) {
-        return statistics
+function sanitizeUri(uri) {
+    return uri.includes("#end") ? uri : `${uri}&${Math.random()}#end`
+}
+
+// Parse log data
+async function parseLogs(uri) {
+    try {
+        const response = await axios.get(uri, {
+            ...USER_AGENT,
+            responseType: "arraybuffer",
+        })
+        const decodedHtml = iconv.decode(response.data, "windows-1251")
+        const dom = new jsdom.JSDOM(decodedHtml)
+
+        let statistics = extractBattleMeta(dom)
+        if (statistics.players.length === 0) {
+            return statistics
+        }
+
+        return await parseBattleLog(uri, statistics)
+    } catch (error) {
+        throw new Error(`Failed to fetch logs from ${uri}: ${error.message}`)
     }
-    statistics = await parseBattleLog(uri, statistics)
+}
+
+// Extract battle metadata and player info
+function extractBattleMeta(dom) {
+    const statistics = { players: [] }
+    const battleTypeMappings = getBattleTypeMappings()
+
+    dom.window.document
+        .querySelectorAll(
+            'td[align="right"][width="100%"][style*="padding-right:20"][valign="top"]'
+        )
+        .forEach((element) => {
+            const comment = element.textContent.trim()
+            const match = battleTypeMappings.find((mapping) =>
+                mapping.regex.test(comment)
+            )
+            if (match) {
+                statistics.battle_type = match.type
+                statistics.battle_image = match.image
+            }
+        })
+
+    statistics.battle_type = statistics.battle_type || "Групповой Конфликт"
+    statistics.battle_image =
+        statistics.battle_image || "https://img.combats.com/i/fighttype1.gif"
+
+    extractPlayerData(dom, statistics)
     return statistics
 }
 
-// Function to extract battle information
-function extractBattleMeta(dom) {
-    const statistics = { players: [] }
-    const battleTypeMappings = [
+// Extract player data from DOM
+function extractPlayerData(dom, statistics) {
+    dom.window.document.querySelectorAll("font.B9").forEach((el) => {
+        const scriptTag = el.querySelector("script").textContent
+        const healthText = el.nextSibling?.textContent
+        const regex = /drwfl\("([^\"]+)",(\d+),"(\d+)",(\d+),"([^\"]+)"\)/
+        const healthRegex = /\[(\d+)\/(\d+)\]/
+        const match = regex.exec(scriptTag)
+        const healthMatch = healthRegex.exec(healthText)
+
+        if (match && healthMatch) {
+            statistics.players.push({
+                name: match[1],
+                user_id: match[2],
+                level: parseInt(match[3], 10),
+                aligns: parseInt(match[4], 10),
+                clan_name: match[5],
+                team: el.querySelector("font")?.className,
+                current_health: parseInt(healthMatch[1], 10),
+                max_health: parseInt(healthMatch[2], 10),
+            })
+        }
+    })
+}
+
+// Parse battle log data
+async function parseBattleLog(log, stats) {
+    const match = log.match(REGEX.url)
+    for (let player of stats.players) {
+        const url = getBaseURL(match[0], player.name)
+        const response = await axios.get(url, {
+            ...USER_AGENT,
+            responseType: "arraybuffer",
+        })
+        const content = iconv.decode(response.data, "windows-1251")
+
+        if (content.includes("Ничего не найдено.")) {
+            throw new Error("Invalid log data.")
+        }
+
+        player.stolb = 0
+        player.extra = 0
+        player.protect = 0
+        player.mana = 0
+        player.healed = 0
+
+        const dom = new jsdom.JSDOM(content)
+        processLogEntries(dom.window.document.body.innerHTML, player)
+    }
+    return stats
+}
+
+// Process log entries for each player
+function processLogEntries(logEntries, player) {
+    const cleanEntries = cleanLogEntries(logEntries)
+
+    cleanEntries.forEach((entry) => {
+        if (HEAL_TYPES.extraHealth.some((extra) => entry.includes(extra))) {
+            const match = entry.match(REGEX.extra)
+            if (match) {
+                player.extra += parseInt(match[1], 10)
+            }
+        }
+        if (HEAL_TYPES.healthHeals.some((heal) => entry.includes(heal))) {
+            const match = entry.match(REGEX.health)
+            if (match) {
+                player.healed += parseInt(match[2], 10)
+                player.max_health = parseInt(match[4], 10)
+                player.original_health = player.max_health - player.extra
+            }
+        } else if (HEAL_TYPES.manaHeals.some((heal) => entry.includes(heal))) {
+            const match = entry.match(REGEX.mana)
+            if (match) {
+                player.mana += parseInt(match[2], 10)
+            }
+        } else if (REGEX.protect.test(entry)) {
+            player.protect += 1
+        }
+    })
+
+    player.stolb = player.healed / (player.max_health - player.extra)
+}
+
+// Helper to clean log entries
+function cleanLogEntries(logEntries) {
+    logEntries = logEntries.replace(/<script.*?<\/script>/gis, "").split("<br>")
+    return logEntries.filter(Boolean)
+}
+
+function getBaseURL(log, userName) {
+    return `${log}&pp=&f=${userName}&f1=1`
+}
+
+function getBattleTypeMappings() {
+    return [
         {
             regex: /Клановое сражение \+1 в нападении/,
             type: "Клановое сражение +1 в нападении",
@@ -155,142 +288,9 @@ function extractBattleMeta(dom) {
             image: "https://img.combats.com/i/fighttype1.gif",
         },
     ]
-
-    dom.window.document
-        .querySelectorAll(
-            'td[align="right"][width="100%"][style*="padding-right:20"][valign="top"]'
-        )
-        .forEach((element) => {
-            const comment = element.textContent.trim()
-            const match = battleTypeMappings.find((mapping) =>
-                mapping.regex.test(comment)
-            )
-            if (match) {
-                statistics.battle_type = match.type
-                statistics.battle_image = match.image
-            }
-        })
-
-    if (!statistics.battle_type) {
-        statistics.battle_type = "Групповой Конфликт"
-        statistics.battle_image = "https://img.combats.com/i/fighttype1.gif"
-    }
-
-    dom.window.document.querySelectorAll("font.B9").forEach((el) => {
-        const scriptTag = el.querySelector("script").textContent
-        const healthText = el.nextSibling && el.nextSibling.textContent
-        const regex = /drwfl\("([^\"]+)",(\d+),"(\d+)",(\d+),"([^\"]+)"\)/
-        const healthRegex = /\[(\d+)\/(\d+)\]/
-        const match = regex.exec(scriptTag)
-        const healthMatch = healthRegex.exec(healthText)
-
-        if (match) {
-            const characterName = match[1]
-            const userId = match[2]
-            const level = parseInt(match[3], 10)
-            const aligns = parseInt(match[4], 10)
-            const clanName = match[5]
-            const characterTeam = el.querySelector("font")?.className
-            const currentHealth = parseInt(healthMatch[1], 10)
-            const maxHealth = parseInt(healthMatch[2], 10)
-
-            statistics.players.push({
-                name: characterName,
-                user_id: userId,
-                level,
-                aligns,
-                clan_name: clanName,
-                team: characterTeam,
-                current_health: currentHealth,
-                max_health: maxHealth,
-            })
-        }
-    })
-    // console.log(statistics)
-    return statistics
 }
 
-async function parseBattleLog(log, stats) {
-    const match = log.match(regexURL)
-
-    for (let player of stats.players) {
-        const url = getBaseURL(match[0], player.name)
-        const response = await axios.get(url, {
-            headers: { "User-Agent": "Chrome/5.0" },
-            responseType: "arraybuffer", // Get the raw buffer
-        })
-        const content = iconv.decode(response.data, "windows-1251")
-
-        // Check for the specific string indicating an incorrect username
-        if (content.includes("Ничего не найдено. Совсем не найдено.")) {
-            throw new Error("Ничего не найдено. Совсем не найдено.")
-        }
-
-        // Check for the specific string indicating an incorrect log ID
-        if (content.includes("Не найден лог этого боя")) {
-            throw new Error("Не найден лог этого боя")
-        }
-
-        player.stolb = 0
-        player.extra = 0
-        player.protect = 0
-        // player.krug = 0
-        player.mana = 0
-        player.healed = 0
-
-        const dom = new jsdom.JSDOM(content)
-        let logEntries = dom.window.document.body.innerHTML
-        if (!logEntries) {
-            console.error("Error: No content in response")
-            return
-        }
-        const hrContentMatch = logEntries.match(/<HR>([\s\S]*?)<HR>/gi)
-        logEntries = hrContentMatch ? hrContentMatch.join("") : ""
-
-        logEntries = logEntries.replace(/<script.*?<\/script>/gis, "")
-        logEntries = logEntries.split("<br>")
-
-        logEntries.forEach((entry) => {
-            if (extraHealth.some((extra) => entry.includes(extra))) {
-                const match = entry.match(regexExtra)
-                if (match) {
-                    const [_, extra] = match
-                    player["extra"] += parseInt(extra, 10)
-                }
-            }
-            if (healthHeals.some((heal) => entry.includes(heal))) {
-                const match = entry.match(regexHealth)
-                if (match) {
-                    const [_, name, otheal, currentHealth, maxHealth] = match
-                    player.healed += parseInt(otheal, 10)
-                    player.max_health = parseInt(maxHealth, 10)
-                    player.original_health = parseInt(
-                        maxHealth - player.extra,
-                        10
-                    )
-                }
-            } else if (manaHeals.some((heal) => entry.includes(heal))) {
-                const match = entry.match(regexMana)
-                if (match) {
-                    const [_, name, otheal, currentHealth, maxHealth] = match
-                    player.mana += parseInt(otheal, 10)
-                }
-            } else if (regexProtect.test(entry)) {
-                player.protect += 1
-            }
-        })
-        player.stolb = parseFloat(
-            player.healed / (player.max_health - player.extra)
-        )
-    }
-    return stats
-}
-
-function getBaseURL(log, userName) {
-    return `${log}&pp=&f=${userName}&f1=1`
-}
-
-// Serve the form as HTML
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`)
 })

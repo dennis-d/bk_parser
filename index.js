@@ -14,6 +14,8 @@ const regexMana =
     /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\] \(Мана\)/i
 const regexExtra = /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/
 const regexURL = /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i
+const regexProtect =
+    /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/
 
 const healthHeals = ["Восстановление энергии", "Исцеление"]
 const manaHeals = ["Восстановление Маны", "Прозрение"]
@@ -231,7 +233,7 @@ async function parseBattleLog(log, stats) {
 
         player.stolb = 0
         player.extra = 0
-        // player.natisk = 0
+        player.protect = 0
         // player.krug = 0
         player.mana = 0
         player.healed = 0
@@ -273,7 +275,8 @@ async function parseBattleLog(log, stats) {
                     const [_, name, otheal, currentHealth, maxHealth] = match
                     player.mana += parseInt(otheal, 10)
                 }
-            } else {
+            } else if (regexProtect.test(entry)) {
+                player.protect += 1
             }
         })
         player.stolb = parseFloat(

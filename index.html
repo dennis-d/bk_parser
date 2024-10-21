@@ -6,8 +6,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Combats Log Parser</title>
         <link rel="stylesheet" href="styles.css">
-        <script src="commoninf.js"></script>
-
         <script>
 
             function getClan(klan) {
@@ -39,7 +37,7 @@
                 } else {
                     color = 'red'
                 }
-                return `<b style="color: ${color};">${stolb.toFixed(2)}</b> / <b style="color: blue;">5</b>`
+                return `[<b style="color: ${color};">${stolb.toFixed(2)}</b> / <b style="color: blue;">5</b>]`
             }
 
             function getName(name,id,level) {
@@ -79,12 +77,12 @@
 
                     data.players.forEach(player => {
                         const playerRow = `<tr>
-                        <td>${getAlign(player.aligns)} ${getClan(player.clan_name)} ${getName(player.name,player.user_id,player.level)}</td>
-                        <td>[${player.current_health}/<b">${player.max_health}</b>]</td>
+                        <td>${getAlign(player.aligns)}${getClan(player.clan_name)}${getName(player.name,player.user_id,player.level)}</td>
+                        <td>[${player.current_health}/<b">${player.max_health}</b>] </td>
                         <td id="stolb">${getStolbFormatted(player.stolb)}</td>
-                        <td id="total-heal">${player.healed} HP</td>
-                    </tr>`
-
+                        <td id="total-heal"><img src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif">${player.healed} HP | (${player.protect})</td >
+                    </tr > `
+                        // <img src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif">
                         if (player.team === 'B1') {
                             clan1 = player.clan_name
                             team1Players += playerRow
@@ -102,16 +100,16 @@
 
                     const team1Table = `<table class="players-table">
                     <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team1Players}
-                </table>`
+                </table > `
                     const team2Table = `<table class="players-table">
                     <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team2Players}
-                </table>`
-                    const team3Table = `<table class="players-table">
+                </table > `
+                    const team3Table = `< table class="players-table" >
                     <tr><th>Ник</th><th>Здоровье</th><th>Столбы</th><th>Отхил</th></tr>${team3Players}
-                </table>`
+                </table > `
 
                     document.getElementById('result').innerHTML = `
-                    <p><strong>Тип боя:</strong> ${data.battle_type} <img src="${data.battle_image}" alt="Battle Image"></p>
+                    < p > <strong>Тип боя:</strong> ${data.battle_type} <img src="${data.battle_image}" alt="Battle Image"></p>
                     <h3>Информация о игроках:</h3>
                     <div class="team-container">
                         <div class="team">
@@ -126,7 +124,7 @@
                 `
                 } catch (error) {
                     document.getElementById('result').innerHTML = `
-                    <p style="color: red;">${error}</p>
+                    < p style = "color: red;" > ${error}</p >
                 `
                 }
             }

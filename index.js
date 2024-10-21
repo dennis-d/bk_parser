@@ -3,10 +3,20 @@ const axios = require("axios")
 const path = require("path")
 const iconv = require("iconv-lite")
 const jsdom = require("jsdom")
+const fs = require('fs')
+const https = require('https')
+
+// SSL options
+const sslOptions = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert'),
+}
 
 const app = express()
 const PORT = process.env.PORT || 12358
 const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
+
+const server = https.createServer(sslOptions, app)
 
 const REGEX = {
     health: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\]/i,
@@ -291,6 +301,6 @@ function getBattleTypeMappings() {
 }
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`)
 })

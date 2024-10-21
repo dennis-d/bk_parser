@@ -129,7 +129,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 </tbody>
             </table>
             <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}</textarea>
-            <button class="copy-button" onclick="copyFromTextarea('team-${team}-data', this)">Copy</button>
+            <button class="copy-button" onclick="copyFromTextarea('team-${team}-data', this)">Копировать</button>
         </div>
     `
 }
@@ -207,7 +207,7 @@ function copyFromTextarea(elementId, button) {
             .writeText(textarea.value)
             .then(() => {
                 // Show "Copied" message
-                button.textContent = "Copied!"
+                button.textContent = "Скопирован!"
                 button.disabled = true
 
                 // Reset after 5 seconds
@@ -228,7 +228,7 @@ function copyFromTextarea(elementId, button) {
             const successful = document.execCommand("copy")
             if (successful) {
                 // Show "Copied" message
-                button.textContent = "Copied!"
+                button.textContent = "Скопирован!"
                 button.disabled = true
 
                 // Reset after 5 seconds

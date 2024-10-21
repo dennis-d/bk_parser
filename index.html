@@ -13,9 +13,10 @@
         <div class="header">
             <h1>Log Parser</h1>
             <section class="form-section">
-                <input type="text" id="uri" name="uri" placeholder="Enter Log URL" required>
-                <button type="submit" id="parseButton" onclick="parseLogs(event)">Parse</button>
-                <button type="button" id="refreshButton" onclick="refreshLogs()">Refresh</button>
+                <input type="text" id="uri" name="uri"
+                    placeholder="https://%city%city.combats.com/logs.pl?log=%timestamp%" required>
+                <button type="submit" id="parseButton" onclick="parseLogs(event)">Анализ</button>
+                <button type="button" id="refreshButton" onclick="refreshLogs()">Обновить</button>
             </section>
         </div>
 

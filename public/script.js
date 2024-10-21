@@ -114,7 +114,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             <table class="players-table">
                 <caption class="team-title">${getClan(
                     klan
-                )} <span>${teamLabel}:</span></caption>
+                )} ${klan}: <span>${teamLabel}</span></caption>
                 <thead>
                     <tr>
                         <th>Ник</th>

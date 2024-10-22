@@ -77,20 +77,22 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                     )}</td>
                     <td id="stolb">${getStolbFormatted(player.stolb)}</td>
                     <td id="total-heal">
-                        <strong>${player.healed}</strong> HP | [${
-                player.protect
-            }]
+                        <strong>${player.healed}</strong>HP|[${player.protect}]
                     </td>
                     <td>
-                        <b><i>${formatCount(player.barrier)}</i></b> /
-                        <b><i>${formatCount(player.snake)}</i></b> /
+                        <b><i>${formatCount(player.barrier)}</i></b>|
+                        <b><i>${formatCount(player.snake)}</i></b>|
                         <b><i>${formatCount(player.tactic)}</i></b>
                     </td>
                 </tr>
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `* ${player.name}\t[${player.current_health}/${player.max_health}]\t{player.stolb.toFixed(2)}\t+[${player.healed} HP|${player.protect}]* \n`
+            tableContent += `* ${player.name}[${player.level}]\t[${
+                player.current_health
+            }|${player.max_health}]\t${player.stolb.toFixed(2)}\t+[${
+                player.healed
+            } HP|${player.protect}]* \n`
 
             return row
         })
@@ -125,9 +127,9 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                         <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
                         <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
                         <th>
-                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" /> |
-                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
-                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif" />
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" />|
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" />|
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif"/>
                         </th>
                     </tr>
                 </thead>
@@ -196,7 +198,7 @@ function getStolbFormatted(stolb) {
     }
     return `[<b style="color: ${color};">${stolb.toFixed(
         2
-    )}</b> / <b style="color: blue;">5</b>]`
+    )}</b>/<b style="color: blue;">5</b>]`
 }
 
 function formatCount(count) {
@@ -211,11 +213,11 @@ function getHealthFormatted(current_health, max_health) {
     } else if (health_percent > 0.85) {
         color = "green"
     }
-    return `[<b style="color: ${color}">${current_health}</b>/<strong style="color: gray">${max_health}</strong>]`
+    return `[<b style="color: ${color}">${current_health}</b>/<strong style="color: black">${max_health}</strong>]`
 }
 
 function getName(name, id, level) {
-    return `${name} [${level}] <a href="http://capitalcity.combats.com/inf.pl?${id}" target="_blank">
+    return `${name}[${level}]<a href="http://capitalcity.combats.com/inf.pl?${id}" target="_blank">
         <img src="https://img.combats.com/i/inf.gif" width="12" height="11" alt="Инф. о ${name}">
     </a>`
 }

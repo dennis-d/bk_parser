@@ -9,7 +9,7 @@ async function parseLogs(event) {
     toggleButtons(false) // Disable buttons while parsing
 
     try {
-        resultContainer.append("<p><string>Анализ...</strong></p>")
+        resultContainer.prepend("Анализ...")
         const response = await fetch("/parse", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -81,9 +81,9 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             }]
                     </td>
                     <td>
-                        <b><i>${formatCount(player.barrier)}</i></b> |
-                        <b><i>${formatCount(player.snake)}</i></b> |
-                        <b><i>${formatCount(player.tactic)}</i></b>
+                        <b>${formatCount(player.barrier)}</b> |
+                        <b>${formatCount(player.snake)}</b> |
+                        <b>${formatCount(player.tactic)}</b>
                     </td>
                 </tr>
             `
@@ -124,12 +124,12 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 <thead>
                     <tr>
                         <th>Ник<img src="https://img.combats.com/i/inf.gif" width="15" height="15"/></th>
-                        <th>Здоровье<img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
-                        <th>Столбы<img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
-                        <th>Отхил<img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
+                        <th>Здоровье <img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
+                        <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
+                        <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
                         <th>
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" />|
-                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" />|
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif"/>
                         </th>
                     </tr>

@@ -27,7 +27,7 @@ const REGEX = {
         /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
     barrier: /Кинетический Барьер/,
     snake: /Змеиная грация/,
-    tactic: /Тактический просчет/,
+    will: /Волевой Барьер/,
 }
 
 const HEAL_TYPES = {
@@ -170,7 +170,7 @@ async function parseBattleLog(log, stats) {
         player.protect = 0
         player.snake = 0
         player.barrier = 0
-        player.tactic = 0
+        player.will = 0
         player.mana = 0
         player.healed = 0
 
@@ -210,8 +210,8 @@ function processLogEntries(logEntries, player) {
             player.barrier += 1
         } else if (REGEX.snake.test(entry)) {
             player.snake += 1
-        } else if (REGEX.tactic.test(entry)) {
-            player.tactic += 1
+        } else if (REGEX.will.test(entry)) {
+            player.will += 1
         }
     })
 

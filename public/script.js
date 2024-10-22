@@ -83,7 +83,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                     <td>
                         <b>${formatCount(player.barrier)}</b> |
                         <b>${formatCount(player.snake)}</b> |
-                        <b>${formatCount(player.tactic)}</b>
+                        <b>${player.will}</b>
                     </td>
                 </tr>
             `
@@ -93,7 +93,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 player.current_health
             }|${player.max_health}]\t${player.stolb.toFixed(2)}\t[+${
                 player.healed
-            } HP|${player.protect}]* \n`
+            } HP|${player.protect}] * \n`
 
             return row
         })
@@ -130,7 +130,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                         <th>
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" />|
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
-                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif"/>
+                            <img width="18" height="12" src="https://img.combats.com/i/items/anti_paral_er.gif"/>
                         </th>
                     </tr>
                 </thead>

@@ -82,19 +82,15 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             }]
                     </td>
                     <td>
-                        <b><i>${player.barrier}</i></b> /
-                        <b><i>${player.snake}</i></b> /
-                        <b><i>${player.tactic}</i></b>
+                        <b><i>${formatCount(player.barrier)}</i></b> /
+                        <b><i>${formatCount(player.snake)}</i></b> /
+                        <b><i>${formatCount(player.tactic)}</i></b>
                     </td>
                 </tr>
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `* ${player.name}\t[${player.current_health}/${
-                player.max_health
-            }]\t${player.stolb.toFixed(2)}\t[${player.healed} HP|${
-                player.protect
-            }]* \n`
+            tableContent += `* ${player.name}\t[${player.current_health}/${player.max_health}]\t{player.stolb.toFixed(2)}\t+[${player.healed} HP|${player.protect}]* \n`
 
             return row
         })
@@ -203,12 +199,16 @@ function getStolbFormatted(stolb) {
     )}</b> / <b style="color: blue;">5</b>]`
 }
 
+function formatCount(count) {
+    return parseInt(Math.ceil(count / 2.0))
+}
+
 function getHealthFormatted(current_health, max_health) {
-    let health_percent = current_health / max_health
+    let health_percent = parseFloat(current_health / parseFloat(max_health))
     let color = "red"
-    if (current_health >= 0.35 && current_health <= 0.85) {
+    if (health_percent >= 0.35 && health_percent <= 0.85) {
         color = "orange"
-    } else if (current_health > 0.85) {
+    } else if (health_percent > 0.85) {
         color = "green"
     }
     return `[<b style="color: ${color}">${current_health}</b>/<strong style="color: gray">${max_health}</strong>]`

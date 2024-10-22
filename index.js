@@ -3,13 +3,13 @@ const axios = require("axios")
 const path = require("path")
 const iconv = require("iconv-lite")
 const jsdom = require("jsdom")
-const fs = require('fs')
-const https = require('https')
+const fs = require("fs")
+const https = require("https")
 
 // SSL options
 const sslOptions = {
-    key: fs.readFileSync('server.key'),
-    cert: fs.readFileSync('server.cert'),
+    key: fs.readFileSync("server.key"),
+    cert: fs.readFileSync("server.cert"),
 }
 
 const app = express()
@@ -25,11 +25,14 @@ const REGEX = {
     url: /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
     protect:
         /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
+    barrier: /Кинетический Барьер/,
+    snake: /Змеиная грация/,
+    tactic: /Тактический просчет/,
 }
 
 const HEAL_TYPES = {
     healthHeals: ["Восстановление энергии", "Исцеление"],
-    manaHeals: ["Восстановление Маны", "Прозрение"],
+    manaHeals: ["Восстановление Маны", "Прозрение", "Духи Льда"],
     extraHealth: ["Резерв сил", "Из последних сил"],
 }
 
@@ -47,7 +50,7 @@ app.get("/", (req, res) => {
 app.post("/parse", async (req, res) => {
     const uri = sanitizeUri(req.body.uri)
     if (!isValidUri(uri)) {
-        return res.status(400).send("Invalid URI format.")
+        return res.status(400).send("Invalid URLformat.")
     }
 
     try {
@@ -160,6 +163,9 @@ async function parseBattleLog(log, stats) {
         player.stolb = 0
         player.extra = 0
         player.protect = 0
+        player.snake = 0
+        player.barrier = 0
+        player.tactic = 0
         player.mana = 0
         player.healed = 0
 
@@ -194,6 +200,12 @@ function processLogEntries(logEntries, player) {
             }
         } else if (REGEX.protect.test(entry)) {
             player.protect += 1
+        } else if (REGEX.will.test(entry)) {
+            player.barrier += 1
+        } else if (REGEX.snake.test(entry)) {
+            player.snake += 1
+        } else if (REGEX.tactic.test(entry)) {
+            player.tactic += 1
         }
     })
 
@@ -302,5 +314,5 @@ function getBattleTypeMappings() {
 
 // Start server
 server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`)
+    console.log(`Server running at https://localhost:${PORT}`)
 })

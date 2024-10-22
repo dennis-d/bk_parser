@@ -15,8 +15,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    padding: 20px;
+    width: 98%;
+    margin: 0;
+    padding: 20px 0 20px 20px;
     background-color: #e0e0e0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -32,16 +33,16 @@ h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-grow: 1;
+    flex-grow: 0.9;
     justify-content: flex-start;
 }
 
 .form-section input[type="text"] {
     width: 55%; /* Takes up 60% of the window width */
-    min-width: 500px; /* Minimum width of 750px */
-    padding: 15px;
+    min-width: 500px;
+    padding: 15px 0 15px 20px;
     margin-left: 20px;
-    border-radius: 5px;
+    border-radius: 1px;
     border: 1px solid #ccc;
     background-color: #fff;
     color: #333;
@@ -71,7 +72,7 @@ h1 {
     display: flex;
     justify-content: space-around; /* Spread tables out */
     align-items: stretch; /* Ensures both tables stretch to the same height */
-    flex-grow: 1;
+    flex-grow: 0.9;
     width: 100%;
     padding: 20px;
 }

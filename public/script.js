@@ -71,14 +71,20 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                     <td>${getAlign(player.aligns)}${getClan(
                 player.clan_name
             )}${getName(player.name, player.user_id, player.level)}</td>
-                    <td>[${player.current_health}/<b>${
-                player.max_health
-            }</b>]</td>
+                    <td>${getHealthFormatted(
+                        player.current_health,
+                        player.max_health
+                    )}</td>
                     <td id="stolb">${getStolbFormatted(player.stolb)}</td>
                     <td id="total-heal">
                         <strong>${player.healed}</strong> HP | [${
-                player.protect * 5
+                player.protect
             }]
+                    </td>
+                    <td>
+                        <b><i>${player.barrier}</i></b> /
+                        <b><i>${player.snake}</i></b> /
+                        <b><i>${player.tactic}</i></b>
                     </td>
                 </tr>
             `
@@ -86,7 +92,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             // Store row content in a hidden <textarea>
             tableContent += `* ${player.name}\t[${player.current_health}/${
                 player.max_health
-            }]\t${player.stolb.toFixed(2)}\t[${player.healed} HP/ ${
+            }]\t${player.stolb.toFixed(2)}\t[${player.healed} HP| ${
                 player.protect
             }]\n *`
 
@@ -105,6 +111,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
+                <td>&nbsp;</td>
             </tr>
         `
     }
@@ -117,10 +124,15 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 )} ${klan}: <span>${teamLabel}</span></caption>
                 <thead>
                     <tr>
-                        <th>Ник</th>
-                        <th>Здоровье</th>
-                        <th>Столбы <img style="cursor:pointer" width="30" height="18" src="http://img.combats.com/i/icon/icon_available_hp.png" /></th>
-                        <th>Отхил <img style="cursor:pointer" width="30" height="18" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" />/<img style="cursor:pointer" width="30" height="18" src="http://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
+                        <th>Ник <img src="https://img.combats.com/i/inf.gif" width="25" height="15"/></th>
+                        <th>Здоровье <img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
+                        <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
+                        <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
+                        <th>Свитки
+                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_spell_wall.gif" /> |
+                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
+                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif" />
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,6 +201,17 @@ function getStolbFormatted(stolb) {
     return `[<b style="color: ${color};">${stolb.toFixed(
         2
     )}</b> / <b style="color: blue;">5</b>]`
+}
+
+function getHealthFormatted(current_health, max_health) {
+    let health_percent = current_health / max_health
+    let color = "red"
+    if (health_percent >= 0.35 && stolb <= 0.85) {
+        color = "orange"
+    } else if (stolb > 0.85) {
+        color = "green"
+    }
+    return `[<b style="color: ${color}">${current_health}</b>/<strong style="color: gray">${max_health}</strong>]`
 }
 
 function getName(name, id, level) {

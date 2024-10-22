@@ -4,13 +4,12 @@ const parseButton = document.getElementById("parseButton")
 const refreshButton = document.getElementById("refreshButton")
 
 async function parseLogs(event) {
-    console.log("Runs")
     event.preventDefault()
     const uri = document.getElementById("uri").value
     toggleButtons(false) // Disable buttons while parsing
 
     try {
-        resultContainer.innerHTML = `<p><string>Анализ...</strong></p>`
+        resultContainer.append("<p><string>Анализ...</strong></p>")
         const response = await fetch("/parse", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -77,11 +76,13 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                     )}</td>
                     <td id="stolb">${getStolbFormatted(player.stolb)}</td>
                     <td id="total-heal">
-                        <strong>${player.healed}</strong>HP|[${player.protect}]
+                        <strong>+${player.healed}</strong>HP | [${
+                player.protect
+            }]
                     </td>
                     <td>
-                        <b><i>${formatCount(player.barrier)}</i></b>|
-                        <b><i>${formatCount(player.snake)}</i></b>|
+                        <b><i>${formatCount(player.barrier)}</i></b> |
+                        <b><i>${formatCount(player.snake)}</i></b> |
                         <b><i>${formatCount(player.tactic)}</i></b>
                     </td>
                 </tr>
@@ -122,10 +123,10 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                 )} ${klan}: <span>${teamLabel}</span></caption>
                 <thead>
                     <tr>
-                        <th>Ник <img src="https://img.combats.com/i/inf.gif" width="25" height="15"/></th>
-                        <th>Здоровье <img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
-                        <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
-                        <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
+                        <th>Ник<img src="https://img.combats.com/i/inf.gif" width="15" height="15"/></th>
+                        <th>Здоровье<img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
+                        <th>Столбы<img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
+                        <th>Отхил<img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
                         <th>
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" />|
                             <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" />|
@@ -198,7 +199,7 @@ function getStolbFormatted(stolb) {
     }
     return `[<b style="color: ${color};">${stolb.toFixed(
         2
-    )}</b>/<b style="color: blue;">5</b>]`
+    )}</b> | <b style="color: blue;">5</b>]`
 }
 
 function formatCount(count) {

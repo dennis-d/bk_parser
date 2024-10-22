@@ -75,7 +75,7 @@ function sanitizeUri(uri) {
 async function parseLogs(uri) {
     try {
         const response = await axios.get(uri, {
-            ...USER_AGENT,
+            ...getRandomUserAgent(),
             responseType: "arraybuffer",
         })
         const decodedHtml = iconv.decode(response.data, "windows-1251")
@@ -151,7 +151,7 @@ async function parseBattleLog(log, stats) {
     for (let player of stats.players) {
         const url = getBaseURL(match[0], player.name)
         const response = await axios.get(url, {
-            ...USER_AGENT,
+            ...getRandomUserAgent(),
             responseType: "arraybuffer",
         })
         const content = iconv.decode(response.data, "windows-1251")
@@ -221,6 +221,31 @@ function cleanLogEntries(logEntries) {
 
 function getBaseURL(log, userName) {
     return `${log}&pp=&f=${userName}&f1=1`
+}
+
+function getRandomUserAgent() {
+    const userAgents = [
+        // Google Chrome on Desktop (Windows, macOS, Linux)
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
+
+        // Safari on Desktop (macOS)
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15", // Example provided
+
+        // Microsoft Edge on Desktop (Windows, macOS)
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.54",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36 Edg/90.0.818.56",
+    ]
+
+    // Randomly pick a user agent from the list
+    const randomIndex = Math.floor(Math.random() * userAgents.length)
+    const randomUserAgent = userAgents[randomIndex]
+
+    // Return the output in the requested format
+    return { headers: { "User-Agent": randomUserAgent } }
 }
 
 function getBattleTypeMappings() {

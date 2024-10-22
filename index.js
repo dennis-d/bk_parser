@@ -200,7 +200,7 @@ function processLogEntries(logEntries, player) {
             }
         } else if (REGEX.protect.test(entry)) {
             player.protect += 1
-        } else if (REGEX.will.test(entry)) {
+        } else if (REGEX.barrier.test(entry)) {
             player.barrier += 1
         } else if (REGEX.snake.test(entry)) {
             player.snake += 1

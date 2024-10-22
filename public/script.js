@@ -128,10 +128,10 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                         <th>Здоровье <img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
                         <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
                         <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>
-                        <th>Свитки
-                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_spell_wall.gif" /> |
-                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
-                            <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif" />
+                        <th>
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_spell_wall.gif" /> |
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_ny_snake_grace.gif" /> |
+                            <img width="18" height="12" src="https://img.combats.com/i/items/invoke_tn_scr_debuff_tck.gif" />
                         </th>
                     </tr>
                 </thead>
@@ -206,9 +206,9 @@ function getStolbFormatted(stolb) {
 function getHealthFormatted(current_health, max_health) {
     let health_percent = current_health / max_health
     let color = "red"
-    if (health_percent >= 0.35 && stolb <= 0.85) {
+    if (current_health >= 0.35 && current_health <= 0.85) {
         color = "orange"
-    } else if (stolb > 0.85) {
+    } else if (current_health > 0.85) {
         color = "green"
     }
     return `[<b style="color: ${color}">${current_health}</b>/<strong style="color: gray">${max_health}</strong>]`

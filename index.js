@@ -180,6 +180,7 @@ function processLogEntries(logEntries, player) {
     const cleanEntries = cleanLogEntries(logEntries)
 
     cleanEntries.forEach((entry) => {
+        // console.log(entry)
         if (HEAL_TYPES.extraHealth.some((extra) => entry.includes(extra))) {
             const match = entry.match(REGEX.extra)
             if (match) {

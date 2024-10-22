@@ -78,6 +78,11 @@ async function parseLogs(uri) {
             ...getRandomUserAgent(),
             responseType: "arraybuffer",
         })
+
+        if (response.status == 429) {
+            // Too many requests
+            throw new Error(`Слишком много запросов, попробуйте поже...`)
+        }
         const decodedHtml = iconv.decode(response.data, "windows-1251")
         const dom = new jsdom.JSDOM(decodedHtml)
 

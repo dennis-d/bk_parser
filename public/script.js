@@ -91,7 +91,7 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             // Store row content in a hidden <textarea>
             tableContent += `* ${player.name}[${player.level}]\t[${
                 player.current_health
-            }|${player.max_health}]\t${player.stolb.toFixed(2)}\t+[${
+            }|${player.max_health}]\t${player.stolb.toFixed(2)}\t[+${
                 player.healed
             } HP|${player.protect}]* \n`
 

@@ -46,8 +46,8 @@ function displayResults(data) {
         <h3>Информация о игроках:</h3>
         `
 
-    const team1 = buildTeamTable(data.players, "B1", "Нападение", maxRows)
-    const team2 = buildTeamTable(data.players, "B2", "Защита", maxRows)
+    const team1 = buildTeamTable(data, "B1", "Нападение", maxRows)
+    const team2 = buildTeamTable(data, "B2", "Защита", maxRows)
 
     document.getElementById("result").innerHTML = `
 
@@ -58,7 +58,8 @@ function displayResults(data) {
     `
 }
 
-function buildTeamTable(players, team, teamLabel, maxRows) {
+function buildTeamTable(data, team, teamLabel, maxRows) {
+    const players = data.players
     let tableContent = ""
     let klan = ""
     const teamPlayers = players
@@ -74,7 +75,10 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
                         player.current_health,
                         player.max_health
                     )}</td>
-                    <td id="stolb">${getStolbFormatted(player.stolb)}</td>
+                    <td id="stolb">${getStolbFormatted(
+                        player.stolb,
+                        data.max_allowed
+                    )}</td>
                     <td id="total-heal">
                         <strong>+${player.healed}</strong>HP | [${
                 player.protect
@@ -89,11 +93,9 @@ function buildTeamTable(players, team, teamLabel, maxRows) {
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `* ${player.name}[${player.level}]\t[${
-                player.current_health
-            }|${player.max_health}]\t${player.stolb.toFixed(2)}\t[+${
-                player.healed
-            } HP|${player.protect}] * \n`
+            tableContent += `* ${player.name}\t[${player.stolb.toFixed(2)}|${
+                data.max_allowed
+            }]\t+${player.healed}HP * \n`
 
             return row
         })
@@ -190,7 +192,7 @@ function getAlign(align) {
     </a>`
 }
 
-function getStolbFormatted(stolb) {
+function getStolbFormatted(stolb, max_allowed) {
     let color = "green"
     if (stolb >= 2 && stolb <= 4) {
         color = "orange"
@@ -199,7 +201,7 @@ function getStolbFormatted(stolb) {
     }
     return `[<b style="color: ${color};">${stolb.toFixed(
         2
-    )}</b> | <b style="color: blue;">5</b>]`
+    )}</b> | <b style="color: blue;">${max_allowed}</b>]`
 }
 
 function formatCount(count) {

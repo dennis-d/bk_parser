@@ -5,8 +5,7 @@ const iconv = require("iconv-lite")
 const jsdom = require("jsdom")
 const fs = require("fs")
 const https = require("https")
-const morgan = require('morgan');
-
+const morgan = require("morgan")
 
 // SSL options
 const sslOptions = {
@@ -16,7 +15,7 @@ const sslOptions = {
 
 const app = express()
 const PORT = process.env.PORT || 12358
-app.use(morgan(':remote-addr :method :url :status :response-time ms'));
+app.use(morgan(":remote-addr :method :url :status :response-time ms"))
 const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
 
 const server = https.createServer(sslOptions, app)
@@ -117,6 +116,7 @@ function extractBattleMeta(dom) {
             if (match) {
                 statistics.battle_type = match.type
                 statistics.battle_image = match.image
+                statistics.max_allowed = match.max_allowed
             }
         })
 

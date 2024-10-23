@@ -93,9 +93,9 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `* ${player.name}\t[${player.stolb.toFixed(2)}|${
+            tableContent += `${player.name}: \t[${player.stolb.toFixed(2)}|${
                 data.max_allowed
-            }]\t+${player.healed}HP * \n`
+            }]\n`
 
             return row
         })
@@ -198,6 +198,9 @@ function getStolbFormatted(stolb, max_allowed) {
         color = "orange"
     } else if (stolb > 4) {
         color = "red"
+    }
+    if (stolb > max_allowed) {
+        stolb = max_allowed
     }
     return `[<b style="color: ${color};">${stolb.toFixed(
         2

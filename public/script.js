@@ -95,9 +95,9 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `${player.name}: \t[ ${player.stolb.toFixed(2)}|${
+            tableContent += `${player.name}: \tC:[ ${player.stolb.toFixed(2)}|${
                 data.max_allowed
-            } ]\n`
+            } ]\tK:${player.barrier}\tЗ:${player.snake}\tB:${player.will}\n`
 
             return row
         })
@@ -147,7 +147,8 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                     ${emptyRows} <!-- Add empty rows to balance the table -->
                 </tbody>
             </table>
-            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}</textarea>
+            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}\n
+            Dead people: ${data.los_muertos[team].join(", ")}\n</textarea>
             <button class="copy-button" onclick="copyFromTextarea('team-${team}-data', this)">Копировать</button>
         </div>
     `

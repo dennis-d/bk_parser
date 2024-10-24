@@ -123,7 +123,9 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
         <div class="team-table-wrapper">
             <table class="players-table">
                 <caption class="team-title"><span class="muertos">
-                <img src="http://img.combats.com/i/a/ud.png" width="25" height="25">
+                <img src="http://img.combats.com/i/a/ud.png" width="25" height="25"
+                alt="${data.los_muertos[team].join(", ")}"
+                title="${data.los_muertos[team].join(", ")}">
                 <strong">${data.los_muertos[team].length}</strong>
                 </span>${getClan(klan)}
                 ${klan}: <span>${teamLabel}</span></caption>

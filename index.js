@@ -24,7 +24,9 @@ const REGEX = {
     health: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\]/i,
     mana: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\] \(Мана\)/i,
     extra: /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/,
+    log_id: /log=(\d+\.\d+)/,
     url: /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
+    username: /<span\s+class=\"(b\d{1})\">([a-zA-Z0-9\s+\-\_]+)<\/span>/i,
     protect:
         /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
     barrier: /Кинетический Барьер/,
@@ -37,6 +39,8 @@ const HEAL_TYPES = {
     manaHeals: ["Восстановление Маны", "Прозрение", "Духи Льда"],
     extraHealth: ["Резерв сил", "Из последних сил"],
 }
+
+const cache = {}
 
 // Middleware for parsing form data
 app.use(express.urlencoded({ extended: true }))
@@ -55,11 +59,35 @@ app.post("/parse", async (req, res) => {
         return res.status(400).send("Invalid URLformat.")
     }
 
+    const logId = getLogIdFromUri(uri)
+
+    // Check if the log is cached and if it's not older than 45 seconds
+    if (cache[logId] && Date.now() - cache[logId].timestamp < 45000) {
+        return res.json(cache[logId].data) // Return cached data
+    }
+
     try {
         const statistics = await parseLogs(uri)
+        // Cache the result and store the timestamp
+        cache[logId] = {
+            data: statistics,
+            timestamp: Date.now(),
+        }
+
+        setTimeout(() => {
+            delete cache[logId]
+        }, 30000) //45 sec
+        // console.log(statistics)
+
+        statistics.players.forEach((player) => {
+            statistics.los_muertos[player.team].delete(player.name)
+        })
+        statistics.los_muertos.B1 = Array.from(statistics.los_muertos.B1)
+        statistics.los_muertos.B2 = Array.from(statistics.los_muertos.B2)
+        // console.log(statistics)
         res.json(statistics)
     } catch (error) {
-        console.error("Error parsing logs:", error.message)
+        console.error("Error parsing log:", error.message, error.stack)
         res.status(500).json({ error: error.message })
     }
 })
@@ -71,6 +99,12 @@ function isValidUri(uri) {
 
 function sanitizeUri(uri) {
     return uri.includes("#end") ? uri : `${uri}&${Math.random()}#end`
+}
+
+// Helper to extract log ID from the URI
+function getLogIdFromUri(uri) {
+    const match = uri.match(REGEX.log_id)
+    return match ? match[0] : null
 }
 
 // Parse log data
@@ -95,13 +129,19 @@ async function parseLogs(uri) {
 
         return await parseBattleLog(uri, statistics)
     } catch (error) {
-        throw new Error(`Failed to fetch logs from ${uri}: ${error.message}`)
+        throw error
     }
 }
 
 // Extract battle metadata and player info
 function extractBattleMeta(dom) {
-    const statistics = { players: [] }
+    const statistics = {
+        players: [],
+        los_muertos: { B1: new Set(), B2: new Set() },
+        battle_type: "Групповой Конфликт",
+        battle_image: "https://img.combats.com/i/fighttype1.gif",
+        max_allowed: 5,
+    }
     const battleTypeMappings = getBattleTypeMappings()
 
     dom.window.document
@@ -145,7 +185,7 @@ function extractPlayerData(dom, statistics) {
                 level: parseInt(match[3], 10),
                 aligns: parseInt(match[4], 10),
                 clan_name: match[5],
-                team: el.querySelector("font")?.className,
+                team: el.querySelector("font")?.className.toUpperCase(),
                 current_health: parseInt(healthMatch[1], 10),
                 max_health: parseInt(healthMatch[2], 10),
             })
@@ -178,17 +218,21 @@ async function parseBattleLog(log, stats) {
         player.healed = 0
 
         const dom = new jsdom.JSDOM(content)
-        processLogEntries(dom.window.document.body.innerHTML, player)
+        processLogEntries(dom.window.document.body.innerHTML, player, stats)
     }
     return stats
 }
 
 // Process log entries for each player
-function processLogEntries(logEntries, player) {
+function processLogEntries(logEntries, player, stats) {
     const cleanEntries = cleanLogEntries(logEntries)
 
     cleanEntries.forEach((entry) => {
         // console.log(entry)
+        if (REGEX.username.test(entry)) {
+            const [_, group, username] = entry.match(REGEX.username)
+            stats.los_muertos[group.toUpperCase()].add(username)
+        }
         if (HEAL_TYPES.extraHealth.some((extra) => entry.includes(extra))) {
             const match = entry.match(REGEX.extra)
             if (match) {

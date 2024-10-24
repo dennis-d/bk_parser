@@ -9,7 +9,7 @@ async function parseLogs(event) {
     toggleButtons(false) // Disable buttons while parsing
 
     try {
-        resultContainer.prepend("Анализ...")
+        document.getElementById("loading-indicator").style.display = "block"
         const response = await fetch("/parse", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -28,7 +28,9 @@ async function parseLogs(event) {
         }
 
         displayResults(data)
+        document.getElementById("loading-indicator").style.display = "none"
     } catch (error) {
+        document.getElementById("loading-indicator").style.display = "none" // Hide loading indicator
         resultContainer.innerHTML = `<p style="color:red;"><strong>${error.message}</strong></p>`
     } finally {
         toggleButtons(true) // Re-enable buttons
@@ -93,9 +95,9 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
             `
 
             // Store row content in a hidden <textarea>
-            tableContent += `${player.name}: \t[${player.stolb.toFixed(2)}|${
+            tableContent += `${player.name}: \t[ ${player.stolb.toFixed(2)}|${
                 data.max_allowed
-            }]\n`
+            } ]\n`
 
             return row
         })
@@ -120,9 +122,11 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
     return `
         <div class="team-table-wrapper">
             <table class="players-table">
-                <caption class="team-title">${getClan(
-                    klan
-                )} ${klan}: <span>${teamLabel}</span></caption>
+                <caption class="team-title"><span class="muertos">
+                <img src="http://img.combats.com/i/a/ud.png" width="25" height="25">
+                <strong">${data.los_muertos[team].length}</strong>
+                </span>${getClan(klan)}
+                ${klan}: <span>${teamLabel}</span></caption>
                 <thead>
                     <tr>
                         <th>Ник<img src="https://img.combats.com/i/inf.gif" width="15" height="15"/></th>

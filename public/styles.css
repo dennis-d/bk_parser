@@ -140,7 +140,21 @@ h1 {
     background-color: #e1e9ef;
 }
 
+h3 {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.muertos {
+    position: absolute;
+    color: rgb(150, 2, 2);
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%); /* Vertically centers the element */
+}
+
 .team-title {
+    position: relative;
     font-size: 1.2em;
     font-weight: bold;
     margin-bottom: 10px;
@@ -165,6 +179,31 @@ h1 {
 
 .hidden-textarea {
     display: none;
+}
+
+.spinner {
+    border: 6px solid #f3f3f3; /* Light grey */
+    border-top: 6px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+
+    /* Positioning */
+    position: fixed; /* Fixed position relative to the viewport */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center the spinner */
+    z-index: 9999; /* Ensure it appears above other elements */
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive Design */

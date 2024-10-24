@@ -147,9 +147,9 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                     ${emptyRows} <!-- Add empty rows to balance the table -->
                 </tbody>
             </table>
-            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}Dead people: ${data.los_muertos[
+            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}Dead people: [${data.los_muertos[
         team
-    ].join(", ")}\n</textarea>
+    ].join(", ")}]\n</textarea>
             <button class="copy-button" onclick="copyFromTextarea('team-${team}-data', this)">Копировать</button>
         </div>
     `

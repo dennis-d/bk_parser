@@ -33,7 +33,7 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Adds a shadow to blend the border */
     object-fit: cover; /* Ensures the image covers the container */
     clip-path: ellipse(
-        50% 60% at 50% 60%
+        25% 35% at 50% 50%
     ); /* Focuses on the center of the image */
 }
 

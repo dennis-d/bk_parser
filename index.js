@@ -28,7 +28,7 @@ const REGEX = {
     extra: /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/,
     log_id: /log=(\d+\.\d+)/,
     url: /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
-    username: /<span\s+class=\"(b\d{1})\">([a-zA-Z0-9\s+\-\_]+)<\/span>/i,
+    username: /<span\s+class=\"(b\d{1})\">([^<>\[\]]+)<\/span>/i,
     protect:
         /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
     barrier: /Кинетический Барьер/,
@@ -84,7 +84,6 @@ app.post("/parse", async (req, res) => {
                 los_muertos: { B1: new Set(), B2: new Set() },
             }
         }
-
         // Clear cache entries after specified timeouts
         setCacheTimeout(logId)
 
@@ -106,6 +105,7 @@ app.post("/parse", async (req, res) => {
         // Convert Sets to arrays for the final response
         statistics.los_muertos.B1 = Array.from(long_cache[logId].los_muertos.B1)
         statistics.los_muertos.B2 = Array.from(long_cache[logId].los_muertos.B2)
+        // console.log(statistics)
 
         res.json(statistics)
     } catch (error) {
@@ -261,9 +261,10 @@ function processLogEntries(logEntries, player, stats) {
     const cleanEntries = cleanLogEntries(logEntries)
 
     cleanEntries.forEach((entry) => {
-        // console.log(entry)
         if (REGEX.username.test(entry)) {
+            // console.log(entry)
             const [_, group, username] = entry.match(REGEX.username)
+            // console.log(group, username)
             stats.los_muertos[group.toUpperCase()].add(username)
         }
         if (HEAL_TYPES.extraHealth.some((extra) => entry.includes(extra))) {

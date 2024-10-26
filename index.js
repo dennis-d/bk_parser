@@ -7,6 +7,8 @@ const fs = require("fs")
 const https = require("https")
 const morgan = require("morgan")
 
+const DEFAULT_TIMEOUT = 30000 // 30 seconds
+const LONG_TIMEOUT = 60 * 60 * 2 * 1000 // 2 hours
 // SSL options
 const sslOptions = {
     key: fs.readFileSync("server.key"),
@@ -40,6 +42,7 @@ const HEAL_TYPES = {
     extraHealth: ["Резерв сил", "Из последних сил"],
 }
 
+const long_cache = {}
 const cache = {}
 
 // Middleware for parsing form data
@@ -56,41 +59,71 @@ app.get("/", (req, res) => {
 app.post("/parse", async (req, res) => {
     const uri = sanitizeUri(req.body.uri)
     if (!isValidUri(uri)) {
-        return res.status(400).send("Invalid URLformat.")
+        return res.status(400).send("Invalid URL format.")
     }
 
     const logId = getLogIdFromUri(uri)
 
-    // Check if the log is cached and if it's not older than 45 seconds
+    // Check if log data is cached and still valid (within 45 seconds)
     if (cache[logId] && Date.now() - cache[logId].timestamp < 45000) {
         return res.json(cache[logId].data) // Return cached data
     }
 
     try {
         const statistics = await parseLogs(uri)
-        // Cache the result and store the timestamp
+
+        // Cache the result with a timestamp
         cache[logId] = {
             data: statistics,
             timestamp: Date.now(),
         }
 
-        setTimeout(() => {
-            delete cache[logId]
-        }, 30000) //45 sec
-        // console.log(statistics)
+        // Initialize long-term cache if not already present
+        if (!long_cache[logId]) {
+            long_cache[logId] = {
+                los_muertos: { B1: new Set(), B2: new Set() },
+            }
+        }
 
+        // Clear cache entries after specified timeouts
+        setCacheTimeout(logId)
+
+        // Update los_muertos sets
         statistics.players.forEach((player) => {
             statistics.los_muertos[player.team].delete(player.name)
         })
-        statistics.los_muertos.B1 = Array.from(statistics.los_muertos.B1)
-        statistics.los_muertos.B2 = Array.from(statistics.los_muertos.B2)
-        // console.log(statistics)
+
+        // Merge current los_muertos data with long_cache using Sets
+        long_cache[logId].los_muertos.B1 = new Set([
+            ...long_cache[logId].los_muertos.B1,
+            ...statistics.los_muertos.B1,
+        ])
+        long_cache[logId].los_muertos.B2 = new Set([
+            ...long_cache[logId].los_muertos.B2,
+            ...statistics.los_muertos.B2,
+        ])
+
+        // Convert Sets to arrays for the final response
+        statistics.los_muertos.B1 = Array.from(long_cache[logId].los_muertos.B1)
+        statistics.los_muertos.B2 = Array.from(long_cache[logId].los_muertos.B2)
+
         res.json(statistics)
     } catch (error) {
         console.error("Error parsing log:", error.message, error.stack)
         res.status(500).json({ error: error.message })
     }
 })
+
+// Helper function to set cache timeouts
+function setCacheTimeout(logId) {
+    setTimeout(() => {
+        delete cache[logId]
+    }, DEFAULT_TIMEOUT)
+
+    setTimeout(() => {
+        delete long_cache[logId]
+    }, LONG_TIMEOUT)
+}
 
 // Helper to validate and sanitize URI
 function isValidUri(uri) {

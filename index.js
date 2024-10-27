@@ -113,18 +113,17 @@ app.post("/parse", async (req, res) => {
         for (let team of Object.entries(long_cache.team)) {
             let others = await sqliteCache.getUsersByClan(team[1])
             // console.log(others)
-            others.filter((user) => {
-                !statistics.los_muertos[team[0]].has(user.username)
-            })
+            others = others.filter(
+                (user) => !statistics.los_muertos[team[0]].has(user.username)
+            )
 
             let live_players = []
             statistics.players.forEach((player) => {
                 live_players.push(player.name)
             })
-            others.filter((user) => {
-                !live_players.includes(user.username)
-            })
-
+            others = others.filter(
+                (user) => !live_players.includes(user.username)
+            )
             long_cache.others[team[0]] = others
         }
 
@@ -255,11 +254,17 @@ function extractPlayerData(dom, statistics) {
 async function parseBattleLog(log, stats) {
     const match = log.match(REGEX.url)
     for (let player of stats.players) {
+        await new Promise((resolve) => setTimeout(resolve, 200))
         const url = getBaseURL(match[0], player.name)
         const response = await axios.get(url, {
             ...getRandomUserAgent(),
             responseType: "arraybuffer",
         })
+
+        if (response.status == 429) {
+            // Too many requests
+            throw new Error(`Слишком много запросов, попробуйте поже...`)
+        }
         const content = iconv.decode(response.data, "windows-1251")
 
         if (content.includes("Ничего не найдено.")) {

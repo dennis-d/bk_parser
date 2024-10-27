@@ -53,7 +53,6 @@ function displayResults(data) {
 
     const team1TextBox = buildTeamTextBox(data.others, "B1")
     const team2TextBox = buildTeamTextBox(data.others, "B2")
-    console.log(team1TextBox)
     document.getElementById("result").innerHTML = `
 
         <div class="result-container">
@@ -61,6 +60,7 @@ function displayResults(data) {
             <div class="team">${team2}${team2TextBox}</div>
         </div>
     `
+    addTooltipEventListeners()
 }
 
 function buildTeamTable(data, team, teamLabel, maxRows) {
@@ -188,6 +188,33 @@ function buildTeamTextBox(others, team) {
             </div>
         </div>
     `
+}
+
+function addTooltipEventListeners() {
+    const muertosImages = document.querySelectorAll(".muertos img")
+    muertosImages.forEach((image) => {
+        image.addEventListener("click", (event) => {
+            event.stopPropagation()
+            const tooltip = document.createElement("div")
+            tooltip.className = "tooltip"
+            tooltip.innerText = image.getAttribute("title")
+            document.body.appendChild(tooltip)
+            const rect = image.getBoundingClientRect()
+            tooltip.style.left = `${rect.left + window.scrollX}px`
+            tooltip.style.top = `${
+                rect.top + window.scrollY - tooltip.offsetHeight
+            }px`
+        })
+
+        image.addEventListener("mouseover", () => {
+            image.style.cursor = "pointer"
+        })
+    })
+
+    document.addEventListener("click", () => {
+        const existingTooltips = document.querySelectorAll(".tooltip")
+        existingTooltips.forEach((tooltip) => tooltip.remove())
+    })
 }
 
 function toggleButtons(enable) {

@@ -3,12 +3,13 @@ const axios = require("axios")
 const path = require("path")
 const iconv = require("iconv-lite")
 const jsdom = require("jsdom")
+const { JSDOM } = jsdom
+
 const fs = require("fs")
 const https = require("https")
 const morgan = require("morgan")
+const sqliteCache = require("./sqlCache")
 
-const DEFAULT_TIMEOUT = 30000 // 30 seconds
-const LONG_TIMEOUT = 60 * 60 * 2 * 1000 // 2 hours
 // SSL options
 const sslOptions = {
     key: fs.readFileSync("server.key"),
@@ -18,7 +19,6 @@ const sslOptions = {
 const app = express()
 const PORT = process.env.PORT || 12358
 app.use(morgan(":remote-addr :method :url :status :response-time ms"))
-const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
 
 const server = https.createServer(sslOptions, app)
 
@@ -41,10 +41,6 @@ const HEAL_TYPES = {
     manaHeals: ["Восстановление Маны", "Прозрение", "Духи Льда"],
     extraHealth: ["Резерв сил", "Из последних сил"],
 }
-
-const long_cache = {}
-const cache = {}
-
 // Middleware for parsing form data
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
@@ -64,48 +60,74 @@ app.post("/parse", async (req, res) => {
 
     const logId = getLogIdFromUri(uri)
 
-    // Check if log data is cached and still valid (within 45 seconds)
-    if (cache[logId] && Date.now() - cache[logId].timestamp < 45000) {
-        return res.json(cache[logId].data) // Return cached data
+    let cache = await sqliteCache.getCache(logId)
+    // console.log(cache)
+    if (cache) {
+        return res.json(cache) // Return cached data
     }
 
     try {
         const statistics = await parseLogs(uri)
-
-        // Cache the result with a timestamp
-        cache[logId] = {
-            data: statistics,
-            timestamp: Date.now(),
-        }
+        statistics.team = { B1: "", B2: "" }
 
         // Initialize long-term cache if not already present
-        if (!long_cache[logId]) {
-            long_cache[logId] = {
+        let long_cache = await sqliteCache.getLongCache(logId)
+
+        if (!long_cache) {
+            long_cache = {
                 los_muertos: { B1: new Set(), B2: new Set() },
+                others: { B1: [], B2: [] },
+                team: { B1: "", B2: "" },
             }
         }
         // Clear cache entries after specified timeouts
-        setCacheTimeout(logId)
+        setCacheTimeout()
 
         // Update los_muertos sets
         statistics.players.forEach((player) => {
             statistics.los_muertos[player.team].delete(player.name)
+            statistics.team[player.team] = player.clan_name
         })
 
-        // Merge current los_muertos data with long_cache using Sets
-        long_cache[logId].los_muertos.B1 = new Set([
-            ...long_cache[logId].los_muertos.B1,
-            ...statistics.los_muertos.B1,
-        ])
-        long_cache[logId].los_muertos.B2 = new Set([
-            ...long_cache[logId].los_muertos.B2,
-            ...statistics.los_muertos.B2,
-        ])
+        if (
+            long_cache.team &&
+            (long_cache.team.B1 == "" || long_cache.team.B2 == "")
+        ) {
+            long_cache.team.B1 = statistics.team.B1
+            long_cache.team.B2 = statistics.team.B2
+        }
+
+        long_cache.los_muertos.B1 = [
+            ...new Set([
+                ...long_cache.los_muertos.B1,
+                ...statistics.los_muertos.B1,
+            ]),
+        ]
+
+        long_cache.los_muertos.B2 = [
+            ...new Set([
+                ...long_cache.los_muertos.B2,
+                ...statistics.los_muertos.B2,
+            ]),
+        ]
+
+        for (let team of Object.entries(statistics.team)) {
+            long_cache.others[team[0]] = (
+                await sqliteCache.getUsersByClan(team[1])
+            ).filter((user) => {
+                // console.log(user)
+                !statistics.los_muertos[team[0]].has(user.username)
+            })
+        }
 
         // Convert Sets to arrays for the final response
-        statistics.los_muertos.B1 = Array.from(long_cache[logId].los_muertos.B1)
-        statistics.los_muertos.B2 = Array.from(long_cache[logId].los_muertos.B2)
+        statistics.los_muertos = long_cache.los_muertos
+        statistics.others = long_cache.others
+        // console.log(long_cache)
+        sqliteCache.setLongCache(logId, long_cache)
         // console.log(statistics)
+
+        sqliteCache.setCache(logId, statistics)
 
         res.json(statistics)
     } catch (error) {
@@ -114,15 +136,10 @@ app.post("/parse", async (req, res) => {
     }
 })
 
-// Helper function to set cache timeouts
-function setCacheTimeout(logId) {
+function setCacheTimeout() {
     setTimeout(() => {
-        delete cache[logId]
-    }, DEFAULT_TIMEOUT)
-
-    setTimeout(() => {
-        delete long_cache[logId]
-    }, LONG_TIMEOUT)
+        sqliteCache.clearExpired(sqliteCache.DEFAULT_TIMEOUT) // Clear expired entries in short-term cache
+    }, sqliteCache.DEFAULT_TIMEOUT)
 }
 
 // Helper to validate and sanitize URI
@@ -153,7 +170,7 @@ async function parseLogs(uri) {
             throw new Error(`Слишком много запросов, попробуйте поже...`)
         }
         const decodedHtml = iconv.decode(response.data, "windows-1251")
-        const dom = new jsdom.JSDOM(decodedHtml)
+        const dom = new JSDOM(decodedHtml)
 
         let statistics = extractBattleMeta(dom)
         if (statistics.players.length === 0) {
@@ -211,7 +228,7 @@ function extractPlayerData(dom, statistics) {
         const match = regex.exec(scriptTag)
         const healthMatch = healthRegex.exec(healthText)
 
-        if (match && healthMatch) {
+        if (match) {
             statistics.players.push({
                 name: match[1],
                 user_id: match[2],
@@ -250,7 +267,7 @@ async function parseBattleLog(log, stats) {
         player.mana = 0
         player.healed = 0
 
-        const dom = new jsdom.JSDOM(content)
+        const dom = new JSDOM(content)
         processLogEntries(dom.window.document.body.innerHTML, player, stats)
     }
     return stats
@@ -262,7 +279,6 @@ function processLogEntries(logEntries, player, stats) {
 
     cleanEntries.forEach((entry) => {
         if (REGEX.username.test(entry)) {
-            // console.log(entry)
             const [_, group, username] = entry.match(REGEX.username)
             // console.log(group, username)
             stats.los_muertos[group.toUpperCase()].add(username)
@@ -440,6 +456,11 @@ function getBattleTypeMappings() {
         },
     ]
 }
+
+// Periodic cleanup of expired cache entries
+setInterval(() => {
+    sqliteCache.clearExpiredLong() // Clear expired entries in long-term cache
+}, 2 * 60 * 60 * 1000)
 
 // Start server
 server.listen(PORT, () => {

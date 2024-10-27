@@ -184,11 +184,11 @@ function removeClan(clan) {
 }
 
 // Fetch users by clan
-function getUsersByClan(clan) {
+function getUsersByClan(clan, rating = 4000) {
     return new Promise((resolve, reject) => {
         db.all(
-            `SELECT * FROM users WHERE clan = ? ORDER BY rating DESC`,
-            [clan],
+            `SELECT * FROM users WHERE clan = ? and rating > ? ORDER BY rating DESC`,
+            [clan, rating],
             (err, rows) => {
                 if (err) {
                     console.error("Error fetching users:", err)

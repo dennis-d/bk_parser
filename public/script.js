@@ -51,11 +51,14 @@ function displayResults(data) {
     const team1 = buildTeamTable(data, "B1", "Нападение", maxRows)
     const team2 = buildTeamTable(data, "B2", "Защита", maxRows)
 
+    const team1TextBox = buildTeamTextBox(data.others, "B1")
+    const team2TextBox = buildTeamTextBox(data.others, "B2")
+    console.log(team1TextBox)
     document.getElementById("result").innerHTML = `
 
         <div class="result-container">
-            <div class="team">${team1}</div>
-            <div class="team">${team2}</div>
+            <div class="team">${team1}${team1TextBox}</div>
+            <div class="team">${team2}${team2TextBox}</div>
         </div>
     `
 }
@@ -162,9 +165,46 @@ async function refreshLogs() {
     }
 }
 
+function buildTeamTextBox(others, team) {
+    // Generate list of player names
+    const playerNames = others[team]
+        .map(
+            (player) => `
+        <span class="player-entry">
+            ${getAlign(player.align)}${getName(
+                player.username,
+                player.user_id,
+                player.level
+            )} ${formatRating(parseInt(player.rating))}
+        </span>
+    `
+        )
+        .join("")
+
+    return `
+          <div class="team-text-box">
+            <div class="player-table">
+                ${playerNames}
+            </div>
+        </div>
+    `
+}
+
 function toggleButtons(enable) {
     parseButton.disabled = !enable
     refreshButton.disabled = !enable
+}
+
+function formatRating(rating) {
+    let ratingColor = "gray"
+    if (rating > 4900) {
+        ratingColor = "red"
+    } else if (rating > 4600) {
+        ratingColor = "orange"
+    } else if (rating > 4200) {
+        ratingColor = "green"
+    }
+    return `(<strong style="color: ${ratingColor}">${rating}</strong>)`
 }
 
 function getClan(klan) {

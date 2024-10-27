@@ -27,7 +27,7 @@ const REGEX = {
     mana: /<font color=\"#006699\" title=\"<b>(.*?)<\/b>"><b>(\+\d+)<\/b><\/font>\s+?\[(\d+)\/(\d+)\] \(Мана\)/i,
     extra: /\(Уровень\sжизни\s\(HP\)\:\s+?\+(\d{3,4})\)/,
     log_id: /log=(\d+\.\d+)/,
-    url: /^https:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
+    url: /^http(s)?:\/\/[^\/]+\.combats\.com\/logs\.pl\?log=\d+\.\d+/i,
     username: /<span\s+class=\"(b\d{1})\">([^<>\[\]]+)<\/span>/i,
     protect:
         /Призрачн(?:ое|ый|ая) (Лезвие|Удар|Топор|Кинжал|Огонь|Вода|Воздух|Земля|защита)/,
@@ -54,14 +54,13 @@ app.get("/", (req, res) => {
 // Handle form submission without reloading the page
 app.post("/parse", async (req, res) => {
     const uri = sanitizeUri(req.body.uri)
+
     if (!isValidUri(uri)) {
         return res.status(400).send("Invalid URL format.")
     }
 
     const logId = getLogIdFromUri(uri)
-
     let cache = await sqliteCache.getCache(logId)
-    // console.log(cache)
     if (cache) {
         return res.json(cache) // Return cached data
     }
@@ -111,13 +110,22 @@ app.post("/parse", async (req, res) => {
             ]),
         ]
 
-        for (let team of Object.entries(statistics.team)) {
-            long_cache.others[team[0]] = (
-                await sqliteCache.getUsersByClan(team[1])
-            ).filter((user) => {
-                // console.log(user)
+        for (let team of Object.entries(long_cache.team)) {
+            let others = await sqliteCache.getUsersByClan(team[1])
+            // console.log(others)
+            others.filter((user) => {
                 !statistics.los_muertos[team[0]].has(user.username)
             })
+
+            let live_players = []
+            statistics.players.forEach((player) => {
+                live_players.push(player.name)
+            })
+            others.filter((user) => {
+                !live_players.includes(user.username)
+            })
+
+            long_cache.others[team[0]] = others
         }
 
         // Convert Sets to arrays for the final response

@@ -76,11 +76,11 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                     <td>${getAlign(player.aligns)}${getClan(
                 player.clan_name
             )}${getName(player.name, player.user_id, player.level)}</td>
-                    <td>${getHealthFormatted(
+                    <td style="text-align: center;">${getHealthFormatted(
                         player.current_health,
                         player.max_health
                     )}</td>
-                    <td id="stolb">${getStolbFormatted(
+                    <td style="text-align: center;" id="stolb">${getStolbFormatted(
                         player.stolb,
                         data.max_allowed
                     )}</td>
@@ -134,7 +134,7 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                 ${klan}: <span>${teamLabel}</span></caption>
                 <thead>
                     <tr>
-                        <th>Ник<img src="https://img.combats.com/i/inf.gif" width="15" height="15"/></th>
+                        <th>Ник <img src="https://img.combats.com/i/inf.gif" width="15" height="15"/></th>
                         <th>Здоровье <img width="25" height="15" src="https://img.combats.com/i/items/pocket_12_heal_100_l.gif" /></th>
                         <th>Столбы <img width="25" height="15" src="https://img.combats.com/i/icon/icon_available_hp.png" /></th>
                         <th>Отхил <img width="25" height="15" src="https://img.combats.com/i/items/invoke_tn_scr_megaheal_2.gif" /> | <img width="25" height="15" src="https://img.combats.com/i/misc/icons/spirit_block25.gif" /></th>

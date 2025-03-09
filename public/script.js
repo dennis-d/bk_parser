@@ -89,7 +89,7 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                 player.protect
             }]
                     </td>
-                    <td>
+                    <td style="text-align: center;">
                         <b>${formatCount(player.barrier)}</b> |
                         <b>${formatCount(player.snake)}</b> |
                         <b>${player.will}</b>
@@ -279,7 +279,7 @@ function getStolbFormatted(stolb, max_allowed) {
     }
     return `[<b style="color: ${color};">${stolb.toFixed(
         2
-    )}</b> | <b style="color: blue;">${max_allowed}</b>]`
+    )}</b>/<b style="color: blue;">${max_allowed}</b>]`
 }
 
 function formatCount(count) {

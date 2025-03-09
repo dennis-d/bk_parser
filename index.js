@@ -34,6 +34,7 @@ const REGEX = {
     barrier: /Кинетический Барьер/,
     snake: /Змеиная грация/,
     will: /Волевой Барьер/,
+    player: /drwfl\("([^\"]+)",(\d+),"(\d+)",(\d+),"([^\"]+)"\)/,
 }
 
 const HEAL_TYPES = {
@@ -199,6 +200,18 @@ function extractBattleMeta(dom) {
         battle_image: "https://img.combats.com/i/fighttype1.gif",
         max_allowed: 5,
     }
+
+    // const allPlayersResponse = await axios.get(
+    //     getInitialPlayerEntriesURI(log),
+    //     {
+    //         ...getRandomUserAgent(),
+    //         responseType: "arraybuffer",
+    //     }
+    // )
+    //   const allPlayersContent = iconv.decode(
+    //     allPlayersResponse.data,
+    //     "windows-1251"
+    // )
     const battleTypeMappings = getBattleTypeMappings()
 
     dom.window.document
@@ -230,9 +243,8 @@ function extractPlayerData(dom, statistics) {
     dom.window.document.querySelectorAll("font.B9").forEach((el) => {
         const scriptTag = el.querySelector("script").textContent
         const healthText = el.nextSibling?.textContent
-        const regex = /drwfl\("([^\"]+)",(\d+),"(\d+)",(\d+),"([^\"]+)"\)/
         const healthRegex = /\[(\d+)\/(\d+)\]/
-        const match = regex.exec(scriptTag)
+        const match = REGEX.player.exec(scriptTag)
         const healthMatch = healthRegex.exec(healthText)
 
         if (match) {
@@ -334,6 +346,10 @@ function cleanLogEntries(logEntries) {
     return logEntries.filter(Boolean)
 }
 
+function getInitialPlayerEntriesURI(log) {
+    return `${log}&pp=&f=12`
+}
+
 function getBaseURL(log, userName) {
     return `${log}&pp=&f=${userName}&f1=1`
 }
@@ -393,7 +409,7 @@ function getBattleTypeMappings() {
             regex: /Регулярный Клановый Вызов 4 на 4/,
             type: "Регулярный Клановый Вызов 4 на 4",
             image: "https://img.combats.com/i/items/sp_clan_perm_call4.gif",
-            max_allowed: 5,
+            max_allowed: 10,
         },
         {
             regex: /Регулярный Клановый Вызов 6 на 6/,

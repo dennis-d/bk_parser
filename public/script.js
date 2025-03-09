@@ -100,7 +100,7 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
             // Store row content in a hidden <textarea>
             tableContent += `${player.name}:\t[${player.stolb.toFixed(2)}|${
                 data.max_allowed
-            } ]\n`
+            }]\n`
 
             return row
         })
@@ -150,7 +150,7 @@ function buildTeamTable(data, team, teamLabel, maxRows) {
                     ${emptyRows} <!-- Add empty rows to balance the table -->
                 </tbody>
             </table>
-            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent}Dead: \"${data.los_muertos[
+            <textarea id="team-${team}-data" class="hidden-textarea">${tableContent} Умерли:\"${data.los_muertos[
         team
     ].join('", "')}"\n</textarea>
             <button class="copy-button" onclick="copyFromTextarea('team-${team}-data', this)">Копировать</button>

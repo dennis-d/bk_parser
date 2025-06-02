@@ -409,7 +409,13 @@ function getBattleTypeMappings() {
             regex: /Регулярный Клановый Вызов 4 на 4/,
             type: "Регулярный Клановый Вызов 4 на 4",
             image: "https://img.combats.com/i/items/sp_clan_perm_call4.gif",
-            max_allowed: 10,
+            max_allowed: 5,
+        },
+        {
+            regex: /Регулярный Клановый Вызов 5 на 5/,
+            type: "Регулярный Клановый Вызов 5 на 5",
+            image: "https://img.combats.com/i/items/sp_clan_perm_call5.gif",
+            max_allowed: 5,
         },
         {
             regex: /Регулярный Клановый Вызов 6 на 6/,

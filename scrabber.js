@@ -3,7 +3,7 @@ const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 const iconv = require("iconv-lite")
 
-const cron = require("node-cron")
+// const cron = require("node-cron")
 const sqliteCache = require("./sqlCache")
 const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
 const { scrapeAndCountKeywords } = require("./parser")
@@ -99,15 +99,15 @@ async function getUserStats(userId) {
     }
 }
 
-// Schedule the scraper to run every 3 days at 3 AM GMT
-cron.schedule(
-    "0 3 */3 * *",
-    () => {
-        scrapeClans()
-    },
-    {
-        timezone: "Etc/GMT",
-    }
-)
+// // Schedule the scraper to run every 3 days at 3 AM GMT
+// cron.schedule(
+//     "0 3 */3 * *",
+//     () => {
+//         scrapeClans()
+//     },
+//     {
+//         timezone: "Etc/GMT",
+//     }
+// )
 // Initial run
 scrapeClans()

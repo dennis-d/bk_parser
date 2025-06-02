@@ -6,6 +6,7 @@ const iconv = require("iconv-lite")
 const cron = require("node-cron")
 const sqliteCache = require("./sqlCache")
 const USER_AGENT = { headers: { "User-Agent": "Chrome/5.0" } }
+const { scrapeAndCountKeywords } = require("./parser")
 
 // Function to scrape clan information
 async function scrapeClans() {
@@ -27,7 +28,6 @@ async function scrapeClans() {
             const clanUrl = `https://capitalcity.combats.com${link.getAttribute(
                 "href"
             )}`
-            await sqliteCache.removeClan(clanName)
             await scrapeClanUsers(clanName, clanUrl)
         }
     } catch (error) {
@@ -51,8 +51,8 @@ async function scrapeClanUsers(clanName, clanUrl) {
             ...document.querySelectorAll("ul.column_users > li"),
         ]
 
-        for (let listItem of userListItems) {
-            const scriptContent = listItem.querySelector("script").textContent
+        for (let userInfo of userListItems) {
+            const scriptContent = userInfo.querySelector("script").textContent
             const userMatch =
                 /drwfl\("([^"]+)",(\d+),"(\d+)",(\d+),".*"\)/.exec(
                     scriptContent
@@ -64,14 +64,15 @@ async function scrapeClanUsers(clanName, clanUrl) {
                 const level = parseInt(userMatch[3])
                 const align = parseInt(userMatch[4])
                 if (level == 12) {
-                    const rating = await getUserRating(user_id)
+                    const stuff = await getUserStats(user_id)
                     const user = {
                         clan: clanName,
                         username,
                         user_id,
                         level,
                         align,
-                        rating,
+                        rating: stuff["rating"],
+                        stuff: stuff,
                     }
 
                     // console.log(
@@ -87,30 +88,14 @@ async function scrapeClanUsers(clanName, clanUrl) {
 }
 
 // Function to scrape user rating from user page
-async function getUserRating(userId) {
+async function getUserStats(userId) {
     try {
         await new Promise((resolve) => setTimeout(resolve, 1000))
         const userUrl = `https://capitalcity.combats.com/inf.pl?${userId}`
-        let response = await axios.get(userUrl, { responseType: "arraybuffer" })
-        const content = iconv.decode(response.data, "windows-1251")
-
-        const dom = new JSDOM(content)
-        const document = dom.window.document
-
-        const ratingElement = document.querySelector(
-            "div.division_score > small > b"
-        )
-        if (ratingElement) {
-            let ratingText = ratingElement.textContent.trim()
-            const ratingMatch = /Рейтинг: (\d+)$/.exec(ratingText)
-            if (ratingMatch) {
-                return parseInt(ratingMatch[1])
-            }
-        }
-        return 0
+        return await scrapeAndCountKeywords(userUrl, false)
     } catch (error) {
         console.error(`Error retrieving rating for user ${userId}:`, error)
-        return 0
+        return { rating: 0, stuff: {} }
     }
 }
 

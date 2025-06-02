@@ -1,7 +1,6 @@
 // sqliteCache.js
 const sqlite3 = require("sqlite3").verbose()
 const path = require("path")
-const iconv = require("iconv-lite")
 
 const DEFAULT_TIMEOUT = 60 * 1000 // 60 seconds
 const LONG_TIMEOUT = 60 * 60 * 3 * 1000 // 3 hours
@@ -39,7 +38,8 @@ db.run(
         username TEXT,
         level INTEGER,
         align INTEGER,
-        rating INTEGER
+        rating INTEGER,
+        stuff JSON
     )
 `
 )
@@ -120,11 +120,12 @@ function clearExpiredLong(maxAge = LONG_TIMEOUT) {
 }
 
 function addUser(user) {
-    const { clan, username, user_id, level, align, rating } = user
+    const { clan, username, user_id, level, align, rating, stuff } = user
+    const stuffValue = stuff !== undefined ? JSON.stringify(stuff) : null
     return new Promise((resolve, reject) => {
         db.run(
-            `INSERT OR REPLACE INTO users (user_id, clan, username, level, align, rating) VALUES (?, ?, ?, ?, ?, ?)`,
-            [user_id, clan, username, level, align, rating],
+            `INSERT OR REPLACE INTO users (user_id, clan, username, level, align, rating, stuff) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, clan, username, level, align, rating, stuffValue],
             (err) => {
                 if (err) {
                     console.error("Error adding user:", err)
@@ -148,6 +149,11 @@ function getUser(userId) {
                     console.error("Error retrieving user:", err)
                     reject(err)
                 } else if (row) {
+                    if (row.stuff) {
+                        try {
+                            row.stuff = JSON.parse(row.stuff);
+                        } catch (_) {}
+                    }
                     resolve(row)
                 } else {
                     resolve(null)

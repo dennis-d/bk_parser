@@ -19,7 +19,7 @@ module.exports = {
             instances: 1,
             autorestart: true,
             watch: false,
-            max_memory_restart: "160M",
+            max_memory_restart: "200M",
 
             // PM2 will restart the app on this cron schedule instead of
             // relying on node‑cron inside the script.
